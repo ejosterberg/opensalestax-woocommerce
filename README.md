@@ -21,8 +21,6 @@ You run a small VM (or container) for the OpenSalesTax engine; this plugin calls
 
 ## Install
 
-Until the plugin is on the WordPress.org directory:
-
 ```bash
 cd /path/to/your/wordpress/wp-content/plugins/
 git clone https://github.com/ejosterberg/opensalestax-woocommerce.git
@@ -31,6 +29,10 @@ composer install --no-dev
 ```
 
 Activate via **WP Admin → Plugins**.
+
+The plugin's `composer.json` declares the [opensalestax-php SDK](https://github.com/ejosterberg/opensalestax-php) as a dependency. Composer will pull it from the SDK's public GitHub repo during install. (The SDK will be on Packagist shortly; once it is, the install path simplifies further.)
+
+For the full step-by-step walkthrough including engine setup, configuration, and verification, see [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## Configure
 

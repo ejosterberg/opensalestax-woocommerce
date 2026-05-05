@@ -10,14 +10,14 @@
     ],
     "repositories": [
         {
-            "type": "path",
-            "url": "../opensalestax-php",
-            "options": {"symlink": true}
+            "type": "vcs",
+            "url": "https://github.com/ejosterberg/opensalestax-php",
+            "_comment": "Remove this block once ejosterberg/opensalestax is on Packagist; Composer will resolve from there by default."
         }
     ],
     "require": {
         "php": ">=8.2",
-        "ejosterberg/opensalestax": "dev-main as 0.1.0"
+        "ejosterberg/opensalestax": "^0.1"
     },
     "require-dev": {
         "10up/wp_mock": "^1.0",

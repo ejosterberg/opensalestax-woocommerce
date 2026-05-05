@@ -16,19 +16,31 @@ By contributing you agree your contribution is licensed under Apache 2.0 (the pr
 
 Every source file must carry an `SPDX-License-Identifier: Apache-2.0` header.
 
-## Dev install (while the SDK is still private)
+## Dev install
 
-The plugin consumes `ejosterberg/opensalestax` (the OpenSalesTax PHP SDK), currently a private repo. Install via Composer **path repository** alongside the SDK:
+```bash
+git clone https://github.com/ejosterberg/opensalestax-woocommerce.git
+cd opensalestax-woocommerce
+composer install
+```
+
+The plugin's `composer.json` declares a VCS repository pointing at the public [`opensalestax-php`](https://github.com/ejosterberg/opensalestax-php) SDK, so Composer will clone the SDK from GitHub during install. Once the SDK lands on Packagist, the VCS entry will be removed and Composer will resolve from Packagist by default.
+
+If you want to actively co-develop both the plugin and the SDK, clone them as siblings and override the VCS repo with a Composer path repo locally:
 
 ```
 ~/projects/
-├── opensalestax-php/                 ← the SDK
-└── opensalestax-woocommerce/         ← this plugin
+├── opensalestax-php/             ← the SDK
+└── opensalestax-woocommerce/     ← this plugin
 ```
 
-`composer.json` here points at `../opensalestax-php` via a path repo. `composer install` will junction it into `vendor/ejosterberg/opensalestax`.
+```bash
+# in the plugin dir:
+composer config repositories.opensalestax-php path '../opensalestax-php'
+composer update ejosterberg/opensalestax
+```
 
-When the SDK eventually publishes to Packagist, the path repo can be removed.
+The path repo override is local to your `composer.json`; don't commit it.
 
 ## Running tests
 

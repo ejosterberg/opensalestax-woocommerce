@@ -19,17 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The SDK is consumed via Composer path-repo at ../opensalestax-php.
-      # Clone the SDK into the sibling path so the path-repo resolves.
-      # Works once the SDK repo is public (default GITHUB_TOKEN can clone
-      # public repos cross-repo). While the SDK is private, this step
-      # fails — that's an expected limitation until the SDK flips public.
-      - name: Checkout PHP SDK alongside (for path-repo resolution)
-        uses: actions/checkout@v4
-        with:
-          repository: ejosterberg/opensalestax-php
-          path: ../opensalestax-php
-
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
@@ -37,6 +26,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      # composer.json declares a VCS repository pointing at
+      # https://github.com/ejosterberg/opensalestax-php (public repo);
+      # composer clones it directly during install. Once the SDK is on
+      # Packagist this VCS entry can be dropped from composer.json.
       - name: Install dependencies
         run: composer update --no-progress --prefer-dist --no-interaction
 

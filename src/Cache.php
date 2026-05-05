@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace OpenSalesTax\WooCommerce;
 
+defined('ABSPATH') || exit;
+
 /**
  * WP transient-based cache for tax-calculation lookups.
  *

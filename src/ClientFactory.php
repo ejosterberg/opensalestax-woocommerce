@@ -8,6 +8,8 @@ namespace OpenSalesTax\WooCommerce;
 
 use OpenSalesTax\Client as OpenSalesTaxClient;
 
+defined('ABSPATH') || exit;
+
 /**
  * Builds an `OpenSalesTax\Client` from saved plugin settings.
  *

@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace OpenSalesTax\WooCommerce;
 
+defined('ABSPATH') || exit;
+
 /**
  * Adds the "OpenSalesTax" subtab under WooCommerce → Settings → Tax.
  *

@@ -10,6 +10,8 @@ use OpenSalesTax\Address;
 use OpenSalesTax\Exceptions\OpenSalesTaxException;
 use OpenSalesTax\LineItem;
 
+defined('ABSPATH') || exit;
+
 /**
  * Implements the `woocommerce_calc_tax` filter — replaces WooCommerce's
  * default tax calculation with a call to the OpenSalesTax engine.
@@ -24,7 +26,15 @@ use OpenSalesTax\LineItem;
  */
 final class TaxHandler
 {
+    /**
+     * Fallback rate-id used when the placeholder tax-rate row is missing
+     * (plugin not activated cleanly). Real rate-id is resolved at request
+     * time from `PlaceholderRate::getRateId()` so WC's `get_tax_totals()`
+     * can label the line as "OpenSalesTax".
+     */
     public const SYNTHETIC_RATE_ID = 'opensalestax';
+
+    private ?int $cachedRateId = null;
 
     public function __construct(
         private readonly ClientFactory $clientFactory,
@@ -102,9 +112,29 @@ final class TaxHandler
         }
 
         $taxTotal = (float) $result->taxTotal;
-        $out = [self::SYNTHETIC_RATE_ID => $taxTotal];
+        $rateKey = $this->resolveRateKey();
+        $out = [$rateKey => $taxTotal];
         $this->cache->set($payloadKey, $out);
         return $out;
+    }
+
+    /**
+     * Resolve the rate-array key. Prefers the placeholder rate's int id
+     * (so WC's `get_tax_totals()` can resolve our line as "OpenSalesTax"
+     * via the rates table). Falls back to the legacy string id if the
+     * placeholder row is missing.
+     */
+    private function resolveRateKey(): string
+    {
+        if ($this->cachedRateId !== null) {
+            return (string) $this->cachedRateId;
+        }
+        $rateId = PlaceholderRate::getRateId();
+        if ($rateId !== null) {
+            $this->cachedRateId = $rateId;
+            return (string) $rateId;
+        }
+        return self::SYNTHETIC_RATE_ID;
     }
 
     private function isCustomerVatExempt(): bool
@@ -201,6 +231,9 @@ final class TaxHandler
     private function fallbackOnError(): array
     {
         $mode = self::stringOption('opensalestax_error_fallback', 'block');
-        return $mode === 'zero' ? [self::SYNTHETIC_RATE_ID => 0.0] : [];
+        if ($mode !== 'zero') {
+            return [];
+        }
+        return [$this->resolveRateKey() => 0.0];
     }
 }

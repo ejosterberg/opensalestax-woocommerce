@@ -169,11 +169,13 @@ if (!function_exists('WC')) {
     }
 }
 
-// Database global used by Cache::flushAll
+// Database global used by Cache::flushAll + PlaceholderRate
 if (!class_exists('wpdb')) {
     class wpdb
     {
         public string $options = 'wp_options';
+        public string $prefix = 'wp_';
+        public int $insert_id = 0;
         public function prepare(string $query, mixed ...$args): string
         {
             return $query;
@@ -181,6 +183,46 @@ if (!class_exists('wpdb')) {
         public function query(string $query): int|bool
         {
             return 0;
+        }
+        public function get_var(string $query): ?string
+        {
+            return null;
+        }
+        public function insert(string $table, array $data, ?array $format = null): int|false
+        {
+            return 1;
+        }
+        public function delete(string $table, array $where, ?array $where_format = null): int|false
+        {
+            return 0;
+        }
+    }
+}
+
+// WP-CLI stubs (only relevant when running under wp-cli).
+// Note: we deliberately do NOT `define('WP_CLI', ...)` here. If we did,
+// PHPStan would see the runtime check `defined('WP_CLI') && WP_CLI` as
+// having a known boolean value and flag it as always-false. Leaving the
+// constant undefined at analysis time matches real production behavior:
+// the constant is only defined when wp-cli is actually loaded.
+if (!class_exists('WP_CLI')) {
+    class WP_CLI
+    {
+        public static function add_command(string $name, mixed $callable): void
+        {
+        }
+        public static function success(string $msg): void
+        {
+        }
+        public static function error(string $msg): never
+        {
+            exit(1);
+        }
+        public static function warning(string $msg): void
+        {
+        }
+        public static function log(string $msg): void
+        {
         }
     }
 }

@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace OpenSalesTax\WooCommerce;
 
+defined('ABSPATH') || exit;
+
 /**
  * Plugin bootstrap. Wires up the tax handler + settings UI + AJAX
  * connection-tester after WooCommerce is loaded.
@@ -62,6 +64,18 @@ final class Plugin
         $taxHandler->register();
         $settings->register();
         $tester->register();
+
+        // Register WP-CLI subcommands. We register each method explicitly so
+        // the dashed subcommand naming (`test-connection`, `cache-flush`,
+        // `placeholder-rate`) is consistent across WP-CLI versions — older
+        // versions auto-dash method names, newer ones don't.
+        if (defined('WP_CLI') && \WP_CLI) {
+            $cli = new Cli\Command($clientFactory);
+            \WP_CLI::add_command('opensalestax test-connection', [$cli, 'test_connection']);
+            \WP_CLI::add_command('opensalestax cache-flush', [$cli, 'cache_flush']);
+            \WP_CLI::add_command('opensalestax calc', [$cli, 'calc']);
+            \WP_CLI::add_command('opensalestax placeholder-rate', [$cli, 'placeholder_rate']);
+        }
     }
 
     public function onActivation(): void
@@ -75,6 +89,12 @@ final class Plugin
                 'Plugin Activation Error',
                 ['back_link' => true],
             );
+        }
+
+        // Ensure the placeholder tax-rate row exists so WooCommerce's
+        // tax-calculation flow fires our filter. Idempotent.
+        if (class_exists('WooCommerce')) {
+            PlaceholderRate::ensure();
         }
     }
 

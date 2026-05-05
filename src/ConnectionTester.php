@@ -8,6 +8,8 @@ namespace OpenSalesTax\WooCommerce;
 
 use OpenSalesTax\Exceptions\OpenSalesTaxException;
 
+defined('ABSPATH') || exit;
+
 /**
  * AJAX handler for the "Test connection" button on the settings page.
  *

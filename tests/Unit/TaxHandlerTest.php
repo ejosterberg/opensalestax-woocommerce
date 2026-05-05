@@ -27,6 +27,15 @@ final class TaxHandlerTest extends TestCase
     protected function setUp(): void
     {
         WP_Mock::setUp();
+        // CalculationLog::isEnabled() is called from the calc-success and
+        // engine-error code paths in TaxHandler::calcTax. Default behavior in
+        // production is "disabled" — match that here so tests don't have to
+        // mock the option individually unless they specifically exercise the
+        // logging path.
+        WP_Mock::userFunction('get_option', [
+            'args' => ['opensalestax_calc_log_enabled', '0'],
+            'return' => '0',
+        ]);
     }
 
     protected function tearDown(): void

@@ -10,6 +10,7 @@ use OpenSalesTax\Address;
 use OpenSalesTax\Exceptions\OpenSalesTaxException;
 use OpenSalesTax\LineItem;
 use OpenSalesTax\WooCommerce\Cache;
+use OpenSalesTax\WooCommerce\CalculationLog;
 use OpenSalesTax\WooCommerce\ClientFactory;
 use OpenSalesTax\WooCommerce\PlaceholderRate;
 use OpenSalesTax\WooCommerce\TaxClassMap;
@@ -254,6 +255,79 @@ final class Command
         self::success('Custom WC tax-class mappings cleared. Now using built-in defaults.');
     }
 
+    /**
+     * Show recent tax calculations from the in-plugin debug log.
+     *
+     * Disabled by default — turn it on under WC > Settings > Tax > OpenSalesTax,
+     * or `wp option update opensalestax_calc_log_enabled 1`. Captures the last
+     * 50 calculations including cache hits, engine calls, and errors.
+     *
+     * ## OPTIONS
+     *
+     * [--limit=<limit>]
+     * : Number of entries to show (newest first).
+     * ---
+     * default: 20
+     * ---
+     *
+     * ## EXAMPLES
+     *
+     *     wp opensalestax recent-calcs
+     *     wp opensalestax recent-calcs --limit=50
+     *
+     * @param array<int, string>     $args
+     * @param array<string, string>  $assoc_args
+     */
+    public function recent_calcs(array $args, array $assoc_args): void
+    {
+        $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
+        if (!CalculationLog::isEnabled()) {
+            self::warning('Calculation log is currently DISABLED. Showing whatever was captured before it was turned off.');
+            self::log("Enable with:  wp option update '" . CalculationLog::ENABLED_OPTION . "' 1");
+            self::log('');
+        }
+        $entries = CalculationLog::getRecent($limit);
+        if (count($entries) === 0) {
+            self::log('No recent calculations recorded.');
+            return;
+        }
+        self::log(sprintf('%-25s %-12s %-7s %-12s %-10s %-10s %-6s %s', 'Timestamp', 'Source', 'ZIP', 'Category', 'Amount', 'Tax', 'Dur', 'Notes'));
+        foreach ($entries as $e) {
+            $tax = $e['tax_total'] ?? null;
+            $dur = $e['duration_ms'] ?? null;
+            $notes = '';
+            if (isset($e['error']) && is_string($e['error']) && $e['error'] !== '') {
+                $notes = $e['error'];
+            } elseif (isset($e['order_id']) && $e['order_id'] !== null) {
+                $notes = 'order=' . $e['order_id'];
+            }
+            self::log(sprintf(
+                '%-25s %-12s %-7s %-12s %-10s %-10s %-6s %s',
+                self::stringify($e['ts'] ?? ''),
+                self::stringify($e['source'] ?? ''),
+                self::stringify($e['zip5'] ?? ''),
+                self::stringify($e['category'] ?? ''),
+                '$' . self::stringify($e['amount'] ?? '0'),
+                $tax === null ? '—' : '$' . self::stringify($tax),
+                $dur === null ? '—' : self::stringify($dur) . 'ms',
+                $notes,
+            ));
+        }
+    }
+
+    /**
+     * Clear the recent-calculations log.
+     *
+     * ## EXAMPLES
+     *
+     *     wp opensalestax clear-log
+     */
+    public function clear_log(): void
+    {
+        CalculationLog::clear();
+        self::success('Calculation log cleared.');
+    }
+
     private static function success(string $msg): void
     {
         if (class_exists('WP_CLI')) {
@@ -280,6 +354,15 @@ final class Command
             return;
         }
         echo "⚠ {$msg}\n";
+    }
+
+    /** Render a mixed scalar (or null) as a string for log output. */
+    private static function stringify(mixed $v): string
+    {
+        if (is_scalar($v)) {
+            return (string) $v;
+        }
+        return '';
     }
 
     private static function log(string $msg): void

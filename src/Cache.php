@@ -32,13 +32,16 @@ final class Cache
         if (!is_array($stored)) {
             return null;
         }
-        // Sanity: ensure all values are scalar floats.
+        // Coerce keys to string. PHP auto-converts numeric-string keys to int
+        // when used in `[$key => $val]`, so the placeholder rate-id round-trips
+        // as int through the transient layer; the WC tax filter treats it as
+        // a string identifier either way.
         $out = [];
         foreach ($stored as $k => $v) {
-            if (!is_string($k)) {
+            if (!is_scalar($v)) {
                 return null;
             }
-            $out[$k] = (float) $v;
+            $out[(string) $k] = (float) $v;
         }
         return $out;
     }

@@ -1,6 +1,6 @@
-# Security Review — opensalestax-woocommerce v0.3.1
+# Security Review — opensalestax-woocommerce v0.3.2
 
-**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, v0.3.0 OrderTaxBreakdown, and v0.3.1 DashboardWidget)
+**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, v0.3.0 OrderTaxBreakdown, v0.3.1 DashboardWidget, and v0.3.2 CalculationLog)
 **Scope:** all PHP source files in `src/` and `opensalestax-woocommerce.php`
 **Methodology:** OWASP Top 10 mapped to WP-plugin-specific concerns; manual line-by-line review against CWE-driven checklist; `composer audit` against current advisories.
 
@@ -143,10 +143,13 @@ WordPress convention: every plugin PHP file should start with `defined('ABSPATH'
 | `DashboardWidget::addWidget()` (v0.3.1) | Capability check | Gated on `current_user_can('manage_woocommerce')` before `wp_add_dashboard_widget()` so non-WC users don't see engine version / configured-base-URL hints. ✓ |
 | `DashboardWidget::countOrdersWithBreakdownToday()` (v0.3.1) | SQL injection on order/meta tables | Uses `$wpdb->prepare()` with `%s` placeholders for the meta key + date threshold; table names interpolated from `$wpdb->prefix` (controlled by WP, never user input). HPOS detection uses `prepare()` against `information_schema`. ✓ |
 | `DashboardWidget::renderHtml()` (v0.3.1) | XSS via engine version / cached health response | All interpolated values pass through `esc_html()` / `esc_attr()` / `esc_url()`. Engine version goes through `esc_html()` even though the engine is trusted. ✓ |
+| `CalculationLog::record()` (v0.3.2) | Untrusted JSON in `wp_options['opensalestax_recent_calcs']` | `loadRaw()` rejects malformed JSON, non-array roots, and non-array entries. The producer side (only `TaxHandler::calcTax`) writes typed scalar fields via `wp_json_encode`, so an attacker who can write to `wp_options` can't get HTML to execute thanks to `esc_html()` in `Settings::renderRecentLog()`. ✓ |
+| `Settings::renderRecentLog()` (v0.3.2) | XSS via log entries on settings page | Every interpolated value passes through `esc_html()` via a `stringify` helper that coerces non-scalars to empty string before escape. ✓ |
+| `CLI::recent_calcs / clear_log` (v0.3.2) | Capability check | WP-CLI access requires shell access, so capability gating is implicit at the OS level. The shipped admin-UI viewer is read-only on the settings page, which is already gated on `manage_options` by WP. ✓ |
 
 ## Test surface
 
-The plugin's PHPUnit suite exercises 74 test cases / 118 assertions covering:
+The plugin's PHPUnit suite exercises 85 test cases / 144 assertions covering:
 
 - Tax-exempt customer path
 - ZIP resolution from billing/shipping/base settings
@@ -158,6 +161,7 @@ The plugin's PHPUnit suite exercises 74 test cases / 118 assertions covering:
 - PlaceholderRate row management
 - OrderTaxBreakdown: capture path, ZIP fallback, zero-rate skip, malformed-meta safety, render-with-jurisdictions, render-with-note, **XSS-defense (real `htmlspecialchars` via `WP_Mock::userFunction` callback override — proves escaping is wired everywhere)**, engine-error tolerance (12 tests)
 - DashboardWidget: not-configured / healthy / unreachable / missing-placeholder / cached-health states (5 tests)
+- CalculationLog: disabled-noop / write-when-enabled / ring-buffer-cap / error-entry / load-empty / load-malformed / limit-results / isEnabled tri-state / clear (10 tests)
 
 Plus the end-to-end integration test against a real WP+WooCom Proxmox VM 907 (`tests/Integration/E2ECartTaxTest.php`).
 

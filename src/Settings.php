@@ -91,6 +91,17 @@ final class Settings
                 ],
             ],
             [
+                'title'    => 'Calculation log',
+                'desc'     => 'Capture each tax calculation (cache hits, engine calls, errors) in a 50-entry ring buffer for troubleshooting. Adds one option-write per calculation; leave OFF in production unless investigating an issue.',
+                'id'       => CalculationLog::ENABLED_OPTION,
+                'type'     => 'select',
+                'default'  => '0',
+                'options'  => [
+                    '0' => 'Disabled (default)',
+                    '1' => 'Enabled — log recent calculations',
+                ],
+            ],
+            [
                 'title'    => 'Test connection',
                 'type'     => 'opensalestax_test_button',  // custom field type rendered below
                 'id'       => 'opensalestax_test_button',
@@ -98,6 +109,10 @@ final class Settings
             [
                 'type' => 'sectionend',
                 'id'   => 'opensalestax_section_end',
+            ],
+            [
+                'type' => 'opensalestax_recent_log',
+                'id'   => 'opensalestax_recent_log',
             ],
         ];
     }
@@ -118,6 +133,64 @@ final class Settings
                 </td>
             </tr>
             <?php
+        });
+    }
+
+    /**
+     * Custom field type that renders the recent-calculations log table
+     * below the settings form.
+     */
+    public function renderRecentLog(): void
+    {
+        add_action('woocommerce_admin_field_opensalestax_recent_log', static function (): void {
+            $entries = CalculationLog::getRecent(20);
+            $enabled = CalculationLog::isEnabled();
+            echo '<h3 style="margin-top:2em;">' . esc_html__('Recent calculations', 'opensalestax-woocommerce') . '</h3>';
+            if (!$enabled) {
+                echo '<p class="description">'
+                    . esc_html__('Logging is currently disabled. Switch the "Calculation log" option above to "Enabled" and save changes to start capturing calculations.', 'opensalestax-woocommerce')
+                    . '</p>';
+                if (count($entries) === 0) {
+                    return;
+                }
+                echo '<p class="description"><em>' . esc_html__('Showing entries from the last time logging was enabled.', 'opensalestax-woocommerce') . '</em></p>';
+            }
+            if (count($entries) === 0) {
+                echo '<p class="description">'
+                    . esc_html__('No calculations have been recorded yet. Run a test cart through checkout, then refresh this page.', 'opensalestax-woocommerce')
+                    . '</p>';
+                return;
+            }
+            echo '<table class="widefat striped" style="max-width:100%;">';
+            echo '<thead><tr>';
+            echo '<th>' . esc_html__('Time (UTC)', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Source', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('ZIP', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Category', 'opensalestax-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Amount', 'opensalestax-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Tax', 'opensalestax-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Duration', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Note / Error', 'opensalestax-woocommerce') . '</th>';
+            echo '</tr></thead><tbody>';
+            $stringify = static fn (mixed $v): string => is_scalar($v) ? (string) $v : '';
+            foreach ($entries as $e) {
+                $tax = $e['tax_total'] ?? null;
+                $dur = $e['duration_ms'] ?? null;
+                $err = isset($e['error']) && is_string($e['error']) ? $e['error'] : '';
+                $orderId = $e['order_id'] ?? null;
+                $note = $err !== '' ? $err : ($orderId !== null ? 'order=' . $stringify($orderId) : '');
+                echo '<tr>';
+                echo '<td>' . esc_html($stringify($e['ts'] ?? '')) . '</td>';
+                echo '<td>' . esc_html($stringify($e['source'] ?? '')) . '</td>';
+                echo '<td>' . esc_html($stringify($e['zip5'] ?? '')) . '</td>';
+                echo '<td>' . esc_html($stringify($e['category'] ?? '')) . '</td>';
+                echo '<td style="text-align:right;">$' . esc_html($stringify($e['amount'] ?? '0')) . '</td>';
+                echo '<td style="text-align:right;">' . ($tax === null ? '—' : '$' . esc_html($stringify($tax))) . '</td>';
+                echo '<td style="text-align:right;">' . ($dur === null ? '—' : esc_html($stringify($dur)) . 'ms') . '</td>';
+                echo '<td>' . esc_html($note) . '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
         });
     }
 
@@ -163,8 +236,9 @@ JS;
         wp_enqueue_script('opensalestax-admin');
         wp_add_inline_script('opensalestax-admin', $js);
 
-        // Register the custom field renderer (idempotent).
+        // Register the custom field renderers (idempotent).
         $this->renderTestButton();
+        $this->renderRecentLog();
     }
 
     private function renderDisclaimerHtml(): string

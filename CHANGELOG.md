@@ -6,6 +6,23 @@ Versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-05-05
+
+### Added
+- **Recent-calculations debug log** (`src/CalculationLog.php`). A 50-entry ring buffer that captures every tax calculation passing through `TaxHandler::calcTax()`. Each entry records timestamp (UTC), source (`cache-hit` / `engine-call` / `error`), destination ZIP, OST category, pre-tax amount, computed tax, round-trip duration in ms, and any error message. Logging is **disabled by default** because it adds one option-write per calculation; turn it on via the new toggle on `WC > Settings > Tax > OpenSalesTax` or `wp option update opensalestax_calc_log_enabled 1`.
+- New WP-CLI commands: `wp opensalestax recent-calcs [--limit=<N>]` (default 20) and `wp opensalestax clear-log`.
+- New "Recent calculations" panel on the OpenSalesTax settings page renders the log as a styled HTML table — only shown when the log option has captured entries (or to nudge users to enable logging).
+
+### Fixed
+- **`Cache::get()` was silently degrading to "no caching"** since v0.1.1. The placeholder-rate id round-tripped through the WP transient layer as `int` (PHP auto-converts numeric-string array keys), but the cache validator rejected entries where any key wasn't `is_string()`. This meant every cart calculation hit the engine, every time. Now `Cache::get()` accepts numeric keys and stringifies them on read, matching how WC's tax filter consumes them either way. Verified end-to-end on VM 907: call 1 → `engine-call` (241ms), call 2 → `cache-hit` (no duration).
+
+### Changed
+- `TaxHandler::calcTax()` instruments the cache-hit, engine-call, and error code paths with `CalculationLog::record()` calls. No-op when logging is disabled.
+- `Plugin::wireUp()` registers two new CLI subcommands (`recent-calcs`, `clear-log`).
+
+### Verified end-to-end
+On VM 907 against engine v0.39, `wp opensalestax recent-calcs` after two identical $100 cart calculations to ZIP 55401 shows the log captured both — first as `engine-call` populating the cache, second as `cache-hit` with no engine round-trip. Error path verified separately with engine intentionally unreachable.
+
 ## [0.3.1] — 2026-05-05
 
 ### Added

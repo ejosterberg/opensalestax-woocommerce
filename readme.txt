@@ -6,7 +6,7 @@ Tested up to: 6.9
 Requires PHP: 8.2
 WC requires at least: 8.2
 WC tested up to: 10.5
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: Apache License 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -79,6 +79,14 @@ The plugin is filter-only — it doesn't write to `wp_woocommerce_tax_rates`. Lo
 Tax calculations are provided as-is for convenience. The merchant is solely responsible for tax-collection accuracy and remittance to the appropriate jurisdictions. Verify against your state Department of Revenue before remitting.
 
 == Changelog ==
+
+= 0.3.2 — 2026-05-05 =
+
+* Recent-calculations debug log. A 50-entry ring buffer captures every tax calculation (cache hit / engine call / error) with timing, ZIP, category, amount, tax total, and any error message. Disabled by default; enable on the settings page or via `wp option update opensalestax_calc_log_enabled 1`.
+* WP-CLI: `wp opensalestax recent-calcs` (with `--limit` flag) and `wp opensalestax clear-log`.
+* New "Recent calculations" panel on the WC > Settings > Tax > OpenSalesTax page renders the log as a styled HTML table.
+* Bug fix: `Cache::get()` was rejecting all entries because PHP auto-converts numeric-string array keys to int — the `is_string()` check failed when the placeholder rate ID round-tripped through the transient layer. The cache silently degraded to "no caching" since v0.1.1. Now the cache actually caches (verified end-to-end on VM 907 — call 2 now records as `cache-hit` with no duration).
+* 9 new unit tests in `CalculationLogTest`; 85 unit tests total.
 
 = 0.3.1 — 2026-05-05 =
 

@@ -82,6 +82,14 @@ final class TaxHandler
 
         $cached = $this->cache->get($payloadKey);
         if ($cached !== null) {
+            $cachedTotal = is_array($cached) ? (float) array_sum(array_map('floatval', $cached)) : 0.0;
+            CalculationLog::record(
+                source: CalculationLog::SOURCE_CACHE_HIT,
+                zip5: $zip5,
+                category: $category,
+                amount: $price,
+                taxTotal: $cachedTotal,
+            );
             return $cached;
         }
 
@@ -93,6 +101,7 @@ final class TaxHandler
             return [];
         }
 
+        $startMs = (int) (microtime(true) * 1000);
         try {
             $result = $client->calculate(
                 address: new Address(zip5: $zip5),
@@ -105,9 +114,27 @@ final class TaxHandler
             );
         } catch (OpenSalesTaxException $e) {
             error_log('[opensalestax-woocommerce] calculate failed: ' . $e->getMessage());
+            CalculationLog::record(
+                source: CalculationLog::SOURCE_ERROR,
+                zip5: $zip5,
+                category: $category,
+                amount: $price,
+                taxTotal: null,
+                durationMs: (int) (microtime(true) * 1000) - $startMs,
+                error: $e->getMessage(),
+            );
             return $this->fallbackOnError();
         } catch (\Throwable $e) {
             error_log('[opensalestax-woocommerce] unexpected calculate error: ' . get_class($e) . ': ' . $e->getMessage());
+            CalculationLog::record(
+                source: CalculationLog::SOURCE_ERROR,
+                zip5: $zip5,
+                category: $category,
+                amount: $price,
+                taxTotal: null,
+                durationMs: (int) (microtime(true) * 1000) - $startMs,
+                error: get_class($e) . ': ' . $e->getMessage(),
+            );
             return $this->fallbackOnError();
         }
 
@@ -115,6 +142,14 @@ final class TaxHandler
         $rateKey = $this->resolveRateKey();
         $out = [$rateKey => $taxTotal];
         $this->cache->set($payloadKey, $out);
+        CalculationLog::record(
+            source: CalculationLog::SOURCE_ENGINE_CALL,
+            zip5: $zip5,
+            category: $category,
+            amount: $price,
+            taxTotal: $taxTotal,
+            durationMs: (int) (microtime(true) * 1000) - $startMs,
+        );
         return $out;
     }
 

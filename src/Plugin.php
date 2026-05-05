@@ -82,6 +82,8 @@ final class Plugin
             \WP_CLI::add_command('opensalestax tax-class-list', [$cli, 'tax_class_list']);
             \WP_CLI::add_command('opensalestax tax-class-set', [$cli, 'tax_class_set']);
             \WP_CLI::add_command('opensalestax tax-class-reset', [$cli, 'tax_class_reset']);
+            \WP_CLI::add_command('opensalestax recent-calcs', [$cli, 'recent_calcs']);
+            \WP_CLI::add_command('opensalestax clear-log', [$cli, 'clear_log']);
         }
     }
 

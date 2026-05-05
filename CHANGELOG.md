@@ -6,6 +6,24 @@ Versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-05-05
+
+### Added
+- **Status dashboard widget** (`src/DashboardWidget.php`). The WP-admin home page now shows a compact OpenSalesTax health panel below "At a Glance":
+  - **Connection** — engine reachable / unreachable / not configured, with engine version + DB connectivity state.
+  - **Placeholder rate** — whether the `wp_woocommerce_tax_rates` row exists (so `WC_Cart::get_tax_totals()` can label the line correctly). Flags MISSING and prompts to re-activate the plugin if the row is gone.
+  - **Orders today** — count of orders created today that have engine-captured breakdown meta. HPOS-aware (queries `wp_wc_orders_meta` with `wp_postmeta` fallback for legacy CPT installs).
+  - Quick-action buttons: Configure → settings page; View orders → `wp-admin/admin.php?page=wc-orders`.
+- Health probe is cached for 60 seconds in a transient (`opensalestax_dashboard_health`) so the widget doesn't hammer the engine on every admin page-load.
+- Visibility gated on `manage_woocommerce` capability — same as the settings page.
+- 5 new unit tests in `DashboardWidgetTest`: not-configured state, healthy state, unreachable state, missing placeholder state, cached-health state.
+
+### Changed
+- `Plugin::wireUp()` registers the new `DashboardWidget` handler.
+
+### Verified end-to-end
+On VM 907 against engine v0.36, the live `renderHtml()` produces a 1070-byte widget showing OK status, engine version, configured base URL, and the per-day order count. Renders correctly under the `manage_woocommerce` capability check.
+
 ## [0.3.0] — 2026-05-05
 
 ### Added

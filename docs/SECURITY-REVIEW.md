@@ -1,6 +1,6 @@
-# Security Review — opensalestax-woocommerce v0.3.0
+# Security Review — opensalestax-woocommerce v0.3.1
 
-**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, and v0.3.0 OrderTaxBreakdown)
+**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, v0.3.0 OrderTaxBreakdown, and v0.3.1 DashboardWidget)
 **Scope:** all PHP source files in `src/` and `opensalestax-woocommerce.php`
 **Methodology:** OWASP Top 10 mapped to WP-plugin-specific concerns; manual line-by-line review against CWE-driven checklist; `composer audit` against current advisories.
 
@@ -140,10 +140,13 @@ WordPress convention: every plugin PHP file should start with `defined('ABSPATH'
 | `OrderTaxBreakdown::renderHtml()` (v0.3.0) | XSS via engine-supplied jurisdiction names / notes | Every interpolated value passes through `esc_html()` / `esc_html__()`; jurisdiction `name`, `type`, `rate_pct`, `tax`, line `category`/`amount`/`tax`/`note` all escaped. Verified via `testRenderHtmlEscapesUserContent` with a real `htmlspecialchars` callback (WP_Mock's default pass-through would have masked the test). ✓ |
 | `OrderTaxBreakdown::captureOnOrderCreate()` (v0.3.0) | JSON injection via order line data | Order line items are read via WC's typed accessors (`get_total()`, `get_tax_class()`); values are cast to `float`/`string` before reaching the SDK; no user-controlled string flows into `wp_json_encode` un-typed. ✓ |
 | `OrderTaxBreakdown::get()` (v0.3.0) | Untrusted JSON deserialization from order meta | `json_decode($raw, true)` returns plain arrays; non-array result rejected; missing/non-array `lines` key rejected. Meta is written only by our own `captureOnOrderCreate`, but an attacker with order-meta write capability still couldn't get HTML to execute thanks to `esc_html()` in the renderer. ✓ |
+| `DashboardWidget::addWidget()` (v0.3.1) | Capability check | Gated on `current_user_can('manage_woocommerce')` before `wp_add_dashboard_widget()` so non-WC users don't see engine version / configured-base-URL hints. ✓ |
+| `DashboardWidget::countOrdersWithBreakdownToday()` (v0.3.1) | SQL injection on order/meta tables | Uses `$wpdb->prepare()` with `%s` placeholders for the meta key + date threshold; table names interpolated from `$wpdb->prefix` (controlled by WP, never user input). HPOS detection uses `prepare()` against `information_schema`. ✓ |
+| `DashboardWidget::renderHtml()` (v0.3.1) | XSS via engine version / cached health response | All interpolated values pass through `esc_html()` / `esc_attr()` / `esc_url()`. Engine version goes through `esc_html()` even though the engine is trusted. ✓ |
 
 ## Test surface
 
-The plugin's PHPUnit suite exercises 69 test cases / 106 assertions covering:
+The plugin's PHPUnit suite exercises 74 test cases / 118 assertions covering:
 
 - Tax-exempt customer path
 - ZIP resolution from billing/shipping/base settings
@@ -154,6 +157,7 @@ The plugin's PHPUnit suite exercises 69 test cases / 106 assertions covering:
 - UrlValidator: loopback, all RFC1918 ranges, link-local, CGNAT, public IPs, schemes, opt-in path (17 tests)
 - PlaceholderRate row management
 - OrderTaxBreakdown: capture path, ZIP fallback, zero-rate skip, malformed-meta safety, render-with-jurisdictions, render-with-note, **XSS-defense (real `htmlspecialchars` via `WP_Mock::userFunction` callback override — proves escaping is wired everywhere)**, engine-error tolerance (12 tests)
+- DashboardWidget: not-configured / healthy / unreachable / missing-placeholder / cached-health states (5 tests)
 
 Plus the end-to-end integration test against a real WP+WooCom Proxmox VM 907 (`tests/Integration/E2ECartTaxTest.php`).
 

@@ -6,7 +6,7 @@ Tested up to: 6.9
 Requires PHP: 8.2
 WC requires at least: 8.2
 WC tested up to: 10.5
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: Apache License 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -79,6 +79,12 @@ The plugin is filter-only — it doesn't write to `wp_woocommerce_tax_rates`. Lo
 Tax calculations are provided as-is for convenience. The merchant is solely responsible for tax-collection accuracy and remittance to the appropriate jurisdictions. Verify against your state Department of Revenue before remitting.
 
 == Changelog ==
+
+= 0.3.1 — 2026-05-05 =
+
+* Status dashboard widget. WP-admin home now shows a compact OpenSalesTax health panel: connection status (with engine version + DB connectivity), placeholder-rate row state, and today's order count with breakdown captured. Health probe results cached 60s in a transient so the dashboard never hammers the engine. Visibility gated on `manage_woocommerce`.
+* HPOS-aware order counting (queries `wp_wc_orders_meta` with legacy CPT fallback).
+* 5 new unit tests in `DashboardWidgetTest`; 74 unit tests total.
 
 = 0.3.0 — 2026-05-05 =
 

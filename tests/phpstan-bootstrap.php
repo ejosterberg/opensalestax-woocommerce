@@ -162,6 +162,23 @@ if (!function_exists('esc_html__')) {
         return $text;
     }
 }
+if (!function_exists('esc_url')) {
+    function esc_url(string $url): string
+    {
+        return $url;
+    }
+}
+if (!function_exists('esc_attr')) {
+    function esc_attr(string $text): string
+    {
+        return $text;
+    }
+}
+if (!function_exists('wp_add_dashboard_widget')) {
+    function wp_add_dashboard_widget(string $widget_id, string $widget_name, callable $callback): void
+    {
+    }
+}
 if (!function_exists('error_log')) {
     // Provided by PHP itself; only for type-completeness
 }

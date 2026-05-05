@@ -6,7 +6,7 @@ Tested up to: 6.9
 Requires PHP: 8.2
 WC requires at least: 8.2
 WC tested up to: 10.5
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: Apache License 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -79,6 +79,13 @@ The plugin is filter-only — it doesn't write to `wp_woocommerce_tax_rates`. Lo
 Tax calculations are provided as-is for convenience. The merchant is solely responsible for tax-collection accuracy and remittance to the appropriate jurisdictions. Verify against your state Department of Revenue before remitting.
 
 == Changelog ==
+
+= 0.3.3 — 2026-05-05 =
+
+* Admin-UI tax-class mapper. Configure WC tax-class → OST category mappings without leaving the browser. New "Tax class → OST category mapping" panel under WC > Settings > Tax > OpenSalesTax shows every WC tax class (built-in + custom) with a dropdown for the OST category. Saves on the standard form-submit. CLI commands still work as before.
+* "Reset all to defaults" checkbox to clear custom overrides in one click.
+* Capability-gated: only users with `manage_woocommerce` can modify the map. Server-side validation drops invalid categories silently.
+* 6 new unit tests in `SettingsTaxClassSaveTest`; 91 unit tests total.
 
 = 0.3.2 — 2026-05-05 =
 

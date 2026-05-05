@@ -6,6 +6,20 @@ Versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-05-05
+
+### Added
+- **Admin-UI tax-class mapper.** New "Tax class → OST category mapping" panel on `WC > Settings > Tax > OpenSalesTax` lets merchants configure mappings without dropping to WP-CLI. Each row shows the WC tax-class slug, a dropdown of the 6 OST categories + "Skip (non-taxable)", and whether the current value is a custom override or default. Includes a "Reset all to defaults" checkbox.
+- The renderer auto-discovers WC's user-defined tax classes (read from `woocommerce_tax_classes` and slugified the same way WC does), the 4 built-in slugs (`''`, `standard`, `reduced-rate`, `zero-rate`), and any slug already present in the merchant's existing override map.
+- 6 new unit tests in `SettingsTaxClassSaveTest`: capability check rejects, reset checkbox path, no-op when no map posted, valid entries persist, invalid categories drop silently, all 6 valid categories accepted.
+
+### Changed
+- `Settings::register()` now also registers `saveTaxClassMap` on the `woocommerce_update_options_tax_opensalestax` action so the form-submit saves through.
+
+### Security
+- `saveTaxClassMap` enforces `current_user_can('manage_woocommerce')` and validates each posted category against `TaxClassMap::VALID_CATEGORIES` (or empty string for skip). Invalid values are silently dropped — the dropdown shouldn't produce them, but defense-in-depth catches a tampered-form submission.
+- Verified on VM 907: an unprivileged user's posted form is no-op'd; the admin user's submit persists; reset clears.
+
 ## [0.3.2] — 2026-05-05
 
 ### Added

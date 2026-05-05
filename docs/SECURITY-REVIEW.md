@@ -1,6 +1,6 @@
-# Security Review — opensalestax-woocommerce v0.3.2
+# Security Review — opensalestax-woocommerce v0.3.3
 
-**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, v0.3.0 OrderTaxBreakdown, v0.3.1 DashboardWidget, and v0.3.2 CalculationLog)
+**Reviewer:** automated audit + manual code review (2026-05-04, updated 2026-05-05 with v0.1.2 SSRF mitigation, v0.2.0 TaxClassMap, v0.3.0 OrderTaxBreakdown, v0.3.1 DashboardWidget, v0.3.2 CalculationLog, and v0.3.3 admin-UI tax-class mapper)
 **Scope:** all PHP source files in `src/` and `opensalestax-woocommerce.php`
 **Methodology:** OWASP Top 10 mapped to WP-plugin-specific concerns; manual line-by-line review against CWE-driven checklist; `composer audit` against current advisories.
 
@@ -136,7 +136,8 @@ WordPress convention: every plugin PHP file should start with `defined('ABSPATH'
 | `eval()` / `assert()` / dynamic include | Code injection vectors | None used (test code uses `eval` only inside PHPUnit fixtures, not production paths) ✓ |
 | Composer dependency tree | Known CVEs | `composer audit` clean ✓ |
 | `TaxClassMap` JSON option (v0.2.0) | Untrusted JSON deserialization | `json_decode($json, true)` returns plain arrays, never objects; non-array result rejected, malformed JSON falls back to `[]` defaults; values validated in `set()` against the `VALID_CATEGORIES` allow-list before persistence ✓ |
-| `TaxClassMap::set()` (v0.2.0) | Capability check | Capability gating enforced at the call site (WP-CLI requires shell access; admin UI not yet exposed). When the admin UI lands in v0.3, calls must be wrapped in `current_user_can('manage_woocommerce')` ⚠ |
+| `TaxClassMap::set()` (v0.2.0) | Capability check | WP-CLI requires shell access. The v0.3.3 admin-UI path goes through `Settings::saveTaxClassMap()`, which gates on `current_user_can('manage_woocommerce')` before any state change. ✓ |
+| `Settings::saveTaxClassMap()` (v0.3.3) | Capability + input validation | Capability check `current_user_can('manage_woocommerce')` runs before any state change; reset and persist paths both gated. Posted slugs/categories pass through `wp_unslash` + `sanitize_text_field` before validation against `TaxClassMap::VALID_CATEGORIES`; invalid categories are silently dropped (the dropdown shouldn't produce them, but defense-in-depth). The render path uses `esc_attr` on field names so malicious slug values can't break out of the form. ✓ |
 | `OrderTaxBreakdown::renderHtml()` (v0.3.0) | XSS via engine-supplied jurisdiction names / notes | Every interpolated value passes through `esc_html()` / `esc_html__()`; jurisdiction `name`, `type`, `rate_pct`, `tax`, line `category`/`amount`/`tax`/`note` all escaped. Verified via `testRenderHtmlEscapesUserContent` with a real `htmlspecialchars` callback (WP_Mock's default pass-through would have masked the test). ✓ |
 | `OrderTaxBreakdown::captureOnOrderCreate()` (v0.3.0) | JSON injection via order line data | Order line items are read via WC's typed accessors (`get_total()`, `get_tax_class()`); values are cast to `float`/`string` before reaching the SDK; no user-controlled string flows into `wp_json_encode` un-typed. ✓ |
 | `OrderTaxBreakdown::get()` (v0.3.0) | Untrusted JSON deserialization from order meta | `json_decode($raw, true)` returns plain arrays; non-array result rejected; missing/non-array `lines` key rejected. Meta is written only by our own `captureOnOrderCreate`, but an attacker with order-meta write capability still couldn't get HTML to execute thanks to `esc_html()` in the renderer. ✓ |
@@ -149,7 +150,7 @@ WordPress convention: every plugin PHP file should start with `defined('ABSPATH'
 
 ## Test surface
 
-The plugin's PHPUnit suite exercises 85 test cases / 144 assertions covering:
+The plugin's PHPUnit suite exercises 91 test cases / 161 assertions covering:
 
 - Tax-exempt customer path
 - ZIP resolution from billing/shipping/base settings
@@ -162,6 +163,7 @@ The plugin's PHPUnit suite exercises 85 test cases / 144 assertions covering:
 - OrderTaxBreakdown: capture path, ZIP fallback, zero-rate skip, malformed-meta safety, render-with-jurisdictions, render-with-note, **XSS-defense (real `htmlspecialchars` via `WP_Mock::userFunction` callback override — proves escaping is wired everywhere)**, engine-error tolerance (12 tests)
 - DashboardWidget: not-configured / healthy / unreachable / missing-placeholder / cached-health states (5 tests)
 - CalculationLog: disabled-noop / write-when-enabled / ring-buffer-cap / error-entry / load-empty / load-malformed / limit-results / isEnabled tri-state / clear (10 tests)
+- Settings::saveTaxClassMap: capability rejects / reset path / no-op when no map / valid persist / invalid silent-drop / all categories accepted (6 tests)
 
 Plus the end-to-end integration test against a real WP+WooCom Proxmox VM 907 (`tests/Integration/E2ECartTaxTest.php`).
 
@@ -186,6 +188,9 @@ Once a fix lands, the disclosure will be coordinated via:
 
 - **v0.2.0** — re-reviewed 2026-05-05 for the TaxClassMap addition.
 - **v0.3.0** — re-reviewed 2026-05-05 for OrderTaxBreakdown. Output-escaping verified end-to-end with a real-`htmlspecialchars` test override (since WP_Mock pass-through would have masked the bug). Order meta deserialization safe (json_decode returns arrays, type-checked).
-- **v0.3.x / v0.4** — full re-review when admin-UI tax-class mapper, debug log, status widget, and WC Subscriptions support ship. Admin-UI specifically must capability-gate every state-changing call.
+- **v0.3.1** — re-reviewed 2026-05-05 for DashboardWidget. Capability gating + SQL injection safety verified.
+- **v0.3.2** — re-reviewed 2026-05-05 for CalculationLog. Deserialization safety verified; output escaping in renderRecentLog passes every value through `esc_html` via a stringify helper.
+- **v0.3.3** — re-reviewed 2026-05-05 for the admin-UI tax-class mapper. Capability check verified live on VM 907 (unprivileged user's POST is no-op'd, admin's persists). Server-side validation against `VALID_CATEGORIES` allow-list confirmed.
+- **v0.4** — full re-review when WC Subscriptions support ships.
 - **Quarterly** — `composer audit` + a quick pass on any new code paths
 - **On every contributor PR** — manual review of any security-touching change

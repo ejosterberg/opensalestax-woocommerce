@@ -234,7 +234,11 @@ WooCommerce ships three default tax classes — Standard, Reduced rate, and Zero
 | `reduced-rate`    | `general`      |
 | `zero-rate`       | (skip — non-taxable) |
 
-**To map a custom class:**
+**To map a custom class — admin UI (v0.3.3+):**
+
+Open **WC > Settings > Tax > OpenSalesTax** and scroll to "Tax class → OST category mapping". Each WC tax class shows a dropdown of the 6 OST categories plus "Skip (non-taxable)". Save with the WC settings page's standard "Save changes" button. A "Reset all to defaults" checkbox clears every override at once.
+
+**Or via WP-CLI:**
 
 ```bash
 # See the current effective mapping

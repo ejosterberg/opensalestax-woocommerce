@@ -179,6 +179,18 @@ if (!function_exists('wp_add_dashboard_widget')) {
     {
     }
 }
+if (!function_exists('sanitize_title')) {
+    function sanitize_title(string $title): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9-]+/i', '-', $title) ?? '');
+    }
+}
+if (!function_exists('__')) {
+    function __(string $text, string $domain = 'default'): string
+    {
+        return $text;
+    }
+}
 if (!function_exists('error_log')) {
     // Provided by PHP itself; only for type-completeness
 }

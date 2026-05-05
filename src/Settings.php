@@ -24,6 +24,7 @@ final class Settings
         add_filter('woocommerce_get_sections_tax', [$this, 'registerSection']);
         add_filter('woocommerce_get_settings_tax', [$this, 'registerFields'], 10, 2);
         add_action('woocommerce_update_options_tax_' . self::SECTION_ID, [Cache::class, 'flushAll']);
+        add_action('woocommerce_update_options_tax_' . self::SECTION_ID, [$this, 'saveTaxClassMap']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
     }
 
@@ -111,6 +112,10 @@ final class Settings
                 'id'   => 'opensalestax_section_end',
             ],
             [
+                'type' => 'opensalestax_tax_class_table',
+                'id'   => 'opensalestax_tax_class_table',
+            ],
+            [
                 'type' => 'opensalestax_recent_log',
                 'id'   => 'opensalestax_recent_log',
             ],
@@ -134,6 +139,161 @@ final class Settings
             </tr>
             <?php
         });
+    }
+
+    /**
+     * Custom field type that renders the WC tax-class → OST category mapper
+     * as a table of `<select>` rows. Saves through `saveTaxClassMap()` on
+     * the WC settings-save action.
+     */
+    public function renderTaxClassTable(): void
+    {
+        add_action('woocommerce_admin_field_opensalestax_tax_class_table', static function (): void {
+            $effective = TaxClassMap::loadEffectiveMap();
+            $custom = TaxClassMap::loadCustomMap();
+            $slugs = self::collectAllTaxClassSlugs($effective);
+
+            echo '<h3 style="margin-top:2em;">' . esc_html__('Tax class → OST category mapping', 'opensalestax-woocommerce') . '</h3>';
+            echo '<p class="description">';
+            echo esc_html__('Map each WooCommerce tax class to one of the OpenSalesTax categories. Defaults below mirror the engine\'s built-in behavior; customize as needed for clothing, groceries, or any custom WC class. Saving here also updates your override map.', 'opensalestax-woocommerce');
+            echo '</p>';
+
+            echo '<table class="widefat striped" style="max-width:760px;">';
+            echo '<thead><tr>';
+            echo '<th style="width:35%;">' . esc_html__('WC tax class', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('OST category', 'opensalestax-woocommerce') . '</th>';
+            echo '<th style="width:15%;">' . esc_html__('Status', 'opensalestax-woocommerce') . '</th>';
+            echo '</tr></thead><tbody>';
+
+            foreach ($slugs as $slug) {
+                $label = $slug === '' ? __('Standard (empty slug)', 'opensalestax-woocommerce') : $slug;
+                $current = $effective[$slug] ?? TaxClassMap::FALLBACK_CATEGORY;
+                $isCustom = isset($custom[$slug]);
+
+                $fieldName = 'opensalestax_tax_class_map[' . esc_attr($slug) . ']';
+
+                echo '<tr>';
+                echo '<td><code>' . esc_html((string) $label) . '</code></td>';
+                echo '<td><select name="' . $fieldName . '" style="min-width:220px;">';
+                // Skip option = empty string.
+                $skipSelected = $current === TaxClassMap::SKIP_CATEGORY ? ' selected' : '';
+                echo '<option value=""' . $skipSelected . '>' . esc_html__('— Skip (non-taxable) —', 'opensalestax-woocommerce') . '</option>';
+                foreach (TaxClassMap::VALID_CATEGORIES as $cat) {
+                    $sel = $current === $cat ? ' selected' : '';
+                    echo '<option value="' . esc_attr($cat) . '"' . $sel . '>' . esc_html($cat) . '</option>';
+                }
+                echo '</select></td>';
+                echo '<td>';
+                if ($isCustom) {
+                    echo '<span style="color:#2271b1;">' . esc_html__('Custom', 'opensalestax-woocommerce') . '</span>';
+                } else {
+                    echo '<span style="color:#646970;">' . esc_html__('Default', 'opensalestax-woocommerce') . '</span>';
+                }
+                echo '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
+
+            echo '<p>';
+            echo '<label><input type="checkbox" name="opensalestax_tax_class_map_reset" value="1" /> ';
+            echo esc_html__('Reset all to defaults (clears any custom overrides on save)', 'opensalestax-woocommerce');
+            echo '</label></p>';
+        });
+    }
+
+    /**
+     * Save handler — fires on `woocommerce_update_options_tax_opensalestax`
+     * after the WC settings form posts back. Reads the
+     * `opensalestax_tax_class_map[<slug>]` array from $_POST and
+     * persists each via TaxClassMap::set().
+     */
+    public function saveTaxClassMap(): void
+    {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        // Honor the "Reset all" checkbox first.
+        if (isset($_POST['opensalestax_tax_class_map_reset']) && $_POST['opensalestax_tax_class_map_reset'] === '1') {
+            TaxClassMap::reset();
+            return;
+        }
+
+        if (!isset($_POST['opensalestax_tax_class_map']) || !is_array($_POST['opensalestax_tax_class_map'])) {
+            return;
+        }
+
+        $posted = wp_unslash($_POST['opensalestax_tax_class_map']);
+        if (!is_array($posted)) {
+            return;
+        }
+
+        // Build the new custom-map atomically so we don't end up half-applied
+        // if one entry has an invalid value. Validate each first.
+        $validated = [];
+        foreach ($posted as $slug => $cat) {
+            if (!is_string($slug)) {
+                continue;
+            }
+            $slug = sanitize_text_field($slug);
+            $cat = is_string($cat) ? sanitize_text_field($cat) : '';
+
+            // Skip values are valid (empty string).
+            if ($cat !== TaxClassMap::SKIP_CATEGORY && !in_array($cat, TaxClassMap::VALID_CATEGORIES, true)) {
+                continue; // Silently drop invalid; the dropdown shouldn't produce bad values.
+            }
+            $validated[$slug] = $cat;
+        }
+
+        // Persist the entire map by clearing then setting each entry. We
+        // bypass TaxClassMap::set's option-write-per-call to avoid N writes
+        // on save; do it as a single update_option.
+        $encoded = wp_json_encode($validated);
+        update_option(TaxClassMap::OPTION_KEY, $encoded === false ? '' : $encoded);
+    }
+
+    /**
+     * Collect every WC tax-class slug that should appear in the mapper:
+     * - WC's built-in standard ('') / standard / reduced-rate / zero-rate
+     * - Any user-defined classes (read from the option WC stores them in)
+     * - Anything already present in our effective map
+     *
+     * @param array<string, string> $effective
+     * @return array<int, string>
+     */
+    private static function collectAllTaxClassSlugs(array $effective): array
+    {
+        $slugs = [
+            '',           // WC Standard (empty slug)
+            'reduced-rate',
+            'zero-rate',
+        ];
+
+        // WC stores user-defined classes in the `woocommerce_tax_classes`
+        // option as a newline-separated string of display names. Convert
+        // each to a slug the same way WC does.
+        $raw = get_option('woocommerce_tax_classes', '');
+        if (is_string($raw) && $raw !== '') {
+            foreach (preg_split('/\r?\n/', $raw) ?: [] as $name) {
+                $name = trim($name);
+                if ($name === '') {
+                    continue;
+                }
+                $slug = sanitize_title($name);
+                if ($slug !== '' && !in_array($slug, $slugs, true)) {
+                    $slugs[] = $slug;
+                }
+            }
+        }
+
+        // Anything in our effective map that we missed.
+        foreach (array_keys($effective) as $slug) {
+            if (!in_array($slug, $slugs, true)) {
+                $slugs[] = $slug;
+            }
+        }
+
+        return $slugs;
     }
 
     /**
@@ -239,6 +399,7 @@ JS;
         // Register the custom field renderers (idempotent).
         $this->renderTestButton();
         $this->renderRecentLog();
+        $this->renderTaxClassTable();
     }
 
     private function renderDisclaimerHtml(): string

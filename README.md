@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE) [![PHP](https://img.shields.io/badge/php-%E2%89%A58.2-777bb4)](composer.json) [![WordPress](https://img.shields.io/badge/wordpress-%E2%89%A56.2-21759b)](readme.txt) [![WooCommerce](https://img.shields.io/badge/woocommerce-%E2%89%A58.2-96588a)](readme.txt)
 
-**Status:** v0.1 alpha. Tested against WordPress 6.6+ / WooCommerce 9+ / OpenSalesTax engine v0.24.
+**Status:** v0.2.0. Tested against WordPress 6.6+ / WooCommerce 10.7 / OpenSalesTax engine v0.36. 57 unit tests + an end-to-end integration test on a real WP+WooCom Proxmox VM.
 
 ## What this saves you
 
@@ -30,7 +30,13 @@ composer install --no-dev
 
 Activate via **WP Admin → Plugins**.
 
-The plugin's `composer.json` declares the [opensalestax-php SDK](https://github.com/ejosterberg/opensalestax-php) as a dependency. Composer will pull it from the SDK's public GitHub repo during install. (The SDK will be on Packagist shortly; once it is, the install path simplifies further.)
+Or via Composer:
+
+```bash
+composer require ejosterberg/opensalestax-woocommerce
+```
+
+The SDK ([`ejosterberg/opensalestax`](https://packagist.org/packages/ejosterberg/opensalestax)) and the plugin ([`ejosterberg/opensalestax-woocommerce`](https://packagist.org/packages/ejosterberg/opensalestax-woocommerce)) are both on Packagist.
 
 For the full step-by-step walkthrough including engine setup, configuration, and verification, see [`docs/INSTALL.md`](docs/INSTALL.md).
 
@@ -55,7 +61,7 @@ The plugin hooks WooCommerce's `woocommerce_calc_tax` filter. On every line that
 5. On cache miss, call `POST /v1/calculate` on your OpenSalesTax engine
 6. Return the calculated tax amount in WC's expected format
 
-Tax breakdown (per-state, per-county, per-city, per-district) is computed but only the combined total flows into WC's tax line. You can read the full breakdown via `wp option get opensalestax_last_breakdown` for accounting.
+Tax breakdown (per-state, per-county, per-city, per-district) is computed and returned by the engine. The combined total flows into WC's tax line; per-jurisdiction detail can be inspected via `wp opensalestax calc <zip> <amount>`.
 
 ## Design choices
 
@@ -75,14 +81,21 @@ Compatible with **classic checkout AND Cart/Checkout Blocks** (Blocks invoke the
 
 HPOS-compatible: this plugin doesn't post-process orders in v0.1, so the HPOS tax-reading caveat doesn't apply.
 
-## What's NOT in v0.1
+## What's in v0.2
 
-- **WC Subscriptions** recurring tax recalculation (v0.2)
-- **WC Tax Class** mapping beyond `standard` / `reduced-rate` / `zero-rate` (v0.2)
-- **WP-CLI** commands (`wp opensalestax sync-rates`, `wp opensalestax test-connection`) (v0.2)
+- ✅ **WC Tax Class custom mapping** — map `clothing`, `groceries`, or any custom WC class to the right OST category (or mark non-taxable). Built-in defaults still apply for `standard`/`reduced-rate`/`zero-rate`. Configure via `wp opensalestax tax-class-list / tax-class-set / tax-class-reset`.
+- ✅ **WP-CLI** commands — `test-connection`, `cache-flush`, `calc <zip> <amount>`, `placeholder-rate`, `tax-class-list`, `tax-class-set`, `tax-class-reset`
+- ✅ **SSRF mitigation** — engine base URL validated against private/loopback/CGNAT ranges (opt-in for LAN deployments)
+- ✅ **Tax-line aggregation fix** — `WC_Cart::get_tax_totals()` correctly labels the line as "OpenSalesTax" via the placeholder rate row
+
+## What's NOT yet shipping
+
+- **WC Subscriptions** recurring tax recalculation (planned for v0.3)
+- **Admin-UI tax-class mapper** (CLI-only for now; v0.3)
 - **Multi-currency** carts — engine is USD-only; non-USD throws
 - **Stripe Connect** / multi-vendor marketplace tax allocation
 - **Per-product** custom tax-code overrides
+- **WP.org plugin directory** submission (planned after launch traction)
 
 ## Disclaimer
 

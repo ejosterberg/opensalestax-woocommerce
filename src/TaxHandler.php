@@ -71,6 +71,14 @@ final class TaxHandler
             return [];
         }
 
+        // Per-state nexus filter: when enabled, skip engine call entirely for
+        // states outside the merchant's nexus list. Returns [] so WC falls
+        // back to its built-in tax-rate calculation (typically: no tax).
+        // Mirrors Vendure v1.2 / Magento (v1.4 candidate) sibling pattern.
+        if (!$this->destinationIsInNexus()) {
+            return [];
+        }
+
         $category = $this->resolveCategory(is_array($rates) ? $rates : []);
         if ($category === null) {
             // Explicitly non-taxable per WC tax class (zero-rate, etc.)
@@ -216,6 +224,81 @@ final class TaxHandler
             return null;
         }
         return substr($digits, 0, 5);
+    }
+
+    /**
+     * True if the merchant has nexus in the destination's state (or the
+     * filter is disabled). The customer's "tax_based_on" choice picks
+     * which address feeds the state lookup; an unresolvable state with the
+     * filter ENABLED is treated as out-of-nexus (fail-closed — the safer
+     * default for a merchant who explicitly opted into the filter).
+     */
+    private function destinationIsInNexus(): bool
+    {
+        if (self::stringOption('opensalestax_nexus_enabled', '0') !== '1') {
+            return true;
+        }
+        $allowlist = $this->nexusAllowlist();
+        $state = $this->resolveDestinationState();
+        if ($state === null) {
+            return false;
+        }
+        return in_array(strtoupper($state), $allowlist, true);
+    }
+
+    /**
+     * Two-letter destination-state code, uppercased, or null if not
+     * resolvable. Mirrors `resolveDestinationZip()` — billing/shipping/base
+     * selection follows the same `woocommerce_tax_based_on` option.
+     */
+    private function resolveDestinationState(): ?string
+    {
+        if (!function_exists('WC')) {
+            return null;
+        }
+        $wc = \WC();
+        if (!is_object($wc) || !isset($wc->customer) || !is_object($wc->customer)) {
+            return null;
+        }
+        $customer = $wc->customer;
+
+        $taxBasedOn = self::stringOption('woocommerce_tax_based_on', 'shipping');
+        $rawState = match ($taxBasedOn) {
+            'billing' => $this->callCustomerMethod($customer, 'get_billing_state'),
+            'base'    => self::stringOption('woocommerce_store_state', ''),
+            default   => $this->callCustomerMethod($customer, 'get_shipping_state')
+                ?: $this->callCustomerMethod($customer, 'get_billing_state'),
+        };
+
+        $state = strtoupper(trim($rawState));
+        if (strlen($state) !== 2 || !ctype_alpha($state)) {
+            return null;
+        }
+        return $state;
+    }
+
+    /**
+     * Parsed allowlist from `opensalestax_nexus_states`: an array of
+     * uppercase 2-letter state codes, deduplicated. Empty list means the
+     * merchant turned the filter on but listed no states — degenerate, but
+     * we honor it (everywhere is out-of-nexus → no tax lines).
+     *
+     * @return array<int, string>
+     */
+    private function nexusAllowlist(): array
+    {
+        $raw = self::stringOption('opensalestax_nexus_states', '');
+        if ($raw === '') {
+            return [];
+        }
+        $parts = preg_split('/[\s,]+/', strtoupper($raw)) ?: [];
+        $out = [];
+        foreach ($parts as $part) {
+            if (strlen($part) === 2 && ctype_alpha($part) && !in_array($part, $out, true)) {
+                $out[] = $part;
+            }
+        }
+        return $out;
     }
 
     private static function stringOption(string $name, string $default): string

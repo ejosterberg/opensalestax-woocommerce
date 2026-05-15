@@ -92,6 +92,26 @@ final class Settings
                 ],
             ],
             [
+                'title'    => 'Per-state nexus filter',
+                'desc'     => 'When enabled, skip the engine call entirely for destinations outside your nexus list — WooCommerce falls back to its built-in tax-rate handling (typically: no tax). Default off = engine is consulted for every taxable line.',
+                'id'       => 'opensalestax_nexus_enabled',
+                'type'     => 'select',
+                'default'  => '0',
+                'options'  => [
+                    '0' => 'Disabled (default) — engine handles every state',
+                    '1' => 'Enabled — only listed states',
+                ],
+            ],
+            [
+                'title'    => 'Nexus states',
+                'desc'     => 'Comma- or space-separated list of 2-letter US state codes where you have nexus, e.g. <code>MN, WI, IA</code>. Only used when the filter above is Enabled. Empty list with the filter on = no states are taxed.',
+                'id'       => 'opensalestax_nexus_states',
+                'type'     => 'text',
+                'default'  => '',
+                'css'      => 'min-width:380px;',
+                'placeholder' => 'MN, WI, IA',
+            ],
+            [
                 'title'    => 'Calculation log',
                 'desc'     => 'Capture each tax calculation (cache hits, engine calls, errors) in a 50-entry ring buffer for troubleshooting. Adds one option-write per calculation; leave OFF in production unless investigating an issue.',
                 'id'       => CalculationLog::ENABLED_OPTION,

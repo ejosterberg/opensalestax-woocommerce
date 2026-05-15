@@ -6,6 +6,24 @@ Versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-15
+
+### Added
+
+- **Per-state nexus filter.** New admin toggle *"Per-state nexus filter"* (under WooCommerce → Settings → Tax → OpenSalesTax) plus a *"Nexus states"* text field (comma- or space-separated 2-letter US state codes, e.g. `MN, WI, IA`). When enabled, the `woocommerce_calc_tax` handler resolves the destination state up-front and returns an empty array (no tax line) for any state not on the allowlist — WooCommerce falls back to its built-in tax-rate calculation (typically no tax). Default off; pre-v0.5 behavior unchanged. Mirrors the Vendure v1.2 / Magento v1.4 sibling pattern.
+- New `TaxHandler::destinationIsInNexus()`, `TaxHandler::resolveDestinationState()`, and `TaxHandler::nexusAllowlist()` helpers — state lookup follows the same `woocommerce_tax_based_on` option (`billing` / `shipping` / `base`) as the existing ZIP resolution.
+- 5 new TaxHandler tests covering: filter-off back-compat path, allowlisted-state pass-through, blocked-state short-circuit, enabled-with-empty-list (blocks everywhere), and the fail-closed path when the customer's state cannot be resolved. 115 tests / 195 assertions total (was 110 / 190).
+
+### Fixed
+
+- **Test fragility**: `TaxHandlerTest::setUp()` now installs a minimal `$wpdb` stub instead of relying on `DashboardWidgetTest` having run first to seed the global. Targeted `--filter TaxHandlerTest` now passes; previously it failed unless the full suite ran in alphabetical order.
+
+### Compatibility
+
+- Filter off → identical behavior to v0.4.1. No new options written until the merchant flips the toggle on.
+- Filter on with empty state list → blocks tax everywhere (degenerate but explicit; honored as-is).
+- Filter on with unresolvable destination state → fail-closed (no tax line). Safer default than ignoring the merchant's explicit opt-in.
+
 ## [0.4.1] — 2026-05-05
 
 ### Added

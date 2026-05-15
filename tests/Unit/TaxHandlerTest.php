@@ -36,6 +36,39 @@ final class TaxHandlerTest extends TestCase
             'args' => ['opensalestax_calc_log_enabled', '0'],
             'return' => '0',
         ]);
+        // Minimal $wpdb stub for `PlaceholderRate::getRateId()` (consulted
+        // by `TaxHandler::resolveRateKey()` on every success/zero-mode
+        // path). Returns null for the rate lookup so callers fall back to
+        // the SYNTHETIC_RATE_ID 'opensalestax', matching prior expectations.
+        // (Pre-v0.5 these tests relied on `$wpdb` already being set as a
+        // side effect of DashboardWidgetTest running first — fragile;
+        // explicit is better.)
+        global $wpdb;
+        $wpdb = new class () {
+            public string $prefix = 'wp_';
+            public function prepare(string $query, mixed ...$args): string
+            {
+                return $query;
+            }
+            public function get_var(string $query): ?string
+            {
+                return null;
+            }
+        };
+    }
+
+    /**
+     * The v0.5 per-state nexus filter is consulted on every calcTax that
+     * resolves a zip; tests that go past zip-resolution must opt the filter
+     * in or out. Default for back-compat = disabled.
+     */
+    private function expectNexusFilterDisabled(): void
+    {
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_enabled', '0'],
+            'return' => '0',
+        ]);
     }
 
     protected function tearDown(): void
@@ -113,6 +146,7 @@ final class TaxHandlerTest extends TestCase
             'args' => ['woocommerce_tax_based_on', 'shipping'],
             'return' => 'shipping',
         ]);
+        $this->expectNexusFilterDisabled();
         // TaxClassMap consults the merchant-override option; no override → defaults apply.
         WP_Mock::userFunction('get_option', [
             'args' => ['opensalestax_tax_class_map', ''],
@@ -123,6 +157,252 @@ final class TaxHandlerTest extends TestCase
 
         $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
         self::assertSame([], $handler->calcTax([], 100.0, $rates, false));
+    }
+
+    public function testNexusFilterDisabledByDefault(): void
+    {
+        // Filter off → identical behavior to the pre-v0.5 plugin. No reads
+        // on `opensalestax_nexus_states`, no state lookup. Verified by
+        // hitting a cache hit and confirming the engine is never built.
+        $customer = new class () {
+            public function is_vat_exempt(): bool
+            {
+                return false;
+            }
+            public function get_shipping_postcode(): string
+            {
+                return '55401';
+            }
+            public function get_billing_postcode(): string
+            {
+                return '';
+            }
+        };
+        $this->stubWC($customer);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        $this->expectNexusFilterDisabled();
+        WP_Mock::userFunction('get_transient', [
+            'times' => 1,
+            'return' => ['opensalestax' => 8.025],
+        ]);
+
+        $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
+        self::assertSame(['opensalestax' => 8.025], $handler->calcTax([], 100.0, [], false));
+    }
+
+    public function testNexusFilterAllowsDestinationInListedState(): void
+    {
+        $customer = new class () {
+            public function is_vat_exempt(): bool
+            {
+                return false;
+            }
+            public function get_shipping_postcode(): string
+            {
+                return '55401';
+            }
+            public function get_billing_postcode(): string
+            {
+                return '';
+            }
+            public function get_shipping_state(): string
+            {
+                return 'MN';
+            }
+            public function get_billing_state(): string
+            {
+                return '';
+            }
+        };
+        $this->stubWC($customer);
+        // First call resolves zip → reads tax_based_on
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_enabled', '0'],
+            'return' => '1',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_states', ''],
+            'return' => 'MN, WI, IA',
+        ]);
+        // resolveDestinationState() reads tax_based_on a second time.
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        WP_Mock::userFunction('get_transient', [
+            'times' => 1,
+            'return' => ['opensalestax' => 8.025],
+        ]);
+
+        $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
+        self::assertSame(['opensalestax' => 8.025], $handler->calcTax([], 100.0, [], false));
+    }
+
+    public function testNexusFilterBlocksDestinationOutsideListedStates(): void
+    {
+        $customer = new class () {
+            public function is_vat_exempt(): bool
+            {
+                return false;
+            }
+            public function get_shipping_postcode(): string
+            {
+                return '90210'; // CA
+            }
+            public function get_billing_postcode(): string
+            {
+                return '';
+            }
+            public function get_shipping_state(): string
+            {
+                return 'CA';
+            }
+            public function get_billing_state(): string
+            {
+                return '';
+            }
+        };
+        $this->stubWC($customer);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_enabled', '0'],
+            'return' => '1',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_states', ''],
+            'return' => 'MN, WI, IA',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+
+        $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
+        self::assertSame([], $handler->calcTax([], 100.0, [], false));
+    }
+
+    public function testNexusFilterEnabledWithEmptyListBlocksEverywhere(): void
+    {
+        // Degenerate config — filter on but no states listed. Honor it
+        // strictly: no taxable line anywhere. The settings UI prompts the
+        // merchant when this happens; we don't second-guess.
+        $customer = new class () {
+            public function is_vat_exempt(): bool
+            {
+                return false;
+            }
+            public function get_shipping_postcode(): string
+            {
+                return '55401';
+            }
+            public function get_billing_postcode(): string
+            {
+                return '';
+            }
+            public function get_shipping_state(): string
+            {
+                return 'MN';
+            }
+            public function get_billing_state(): string
+            {
+                return '';
+            }
+        };
+        $this->stubWC($customer);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_enabled', '0'],
+            'return' => '1',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_states', ''],
+            'return' => '',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+
+        $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
+        self::assertSame([], $handler->calcTax([], 100.0, [], false));
+    }
+
+    public function testNexusFilterBlocksWhenDestinationStateMissing(): void
+    {
+        // Filter enabled but state cannot be resolved (customer hasn't
+        // filled in state). Fail-closed — safer than silently ignoring.
+        $customer = new class () {
+            public function is_vat_exempt(): bool
+            {
+                return false;
+            }
+            public function get_shipping_postcode(): string
+            {
+                return '55401';
+            }
+            public function get_billing_postcode(): string
+            {
+                return '';
+            }
+            public function get_shipping_state(): string
+            {
+                return '';
+            }
+            public function get_billing_state(): string
+            {
+                return '';
+            }
+        };
+        $this->stubWC($customer);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_enabled', '0'],
+            'return' => '1',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['opensalestax_nexus_states', ''],
+            'return' => 'MN, WI',
+        ]);
+        WP_Mock::userFunction('get_option', [
+            'times' => 1,
+            'args' => ['woocommerce_tax_based_on', 'shipping'],
+            'return' => 'shipping',
+        ]);
+
+        $handler = new TaxHandler($this->factoryThatShouldNotBeCalled(), new Cache());
+        self::assertSame([], $handler->calcTax([], 100.0, [], false));
     }
 
     public function testCacheHitReturnsWithoutCallingEngine(): void
@@ -147,6 +427,7 @@ final class TaxHandlerTest extends TestCase
             'args' => ['woocommerce_tax_based_on', 'shipping'],
             'return' => 'shipping',
         ]);
+        $this->expectNexusFilterDisabled();
         WP_Mock::userFunction('get_transient', [
             'times' => 1,
             'return' => ['opensalestax' => 8.025],
@@ -179,6 +460,7 @@ final class TaxHandlerTest extends TestCase
             'args' => ['woocommerce_tax_based_on', 'shipping'],
             'return' => 'shipping',
         ]);
+        $this->expectNexusFilterDisabled();
         WP_Mock::userFunction('get_transient', [
             'times' => 1,
             'return' => false,
@@ -229,6 +511,7 @@ final class TaxHandlerTest extends TestCase
             'args' => ['woocommerce_tax_based_on', 'shipping'],
             'return' => 'shipping',
         ]);
+        $this->expectNexusFilterDisabled();
         WP_Mock::userFunction('get_transient', [
             'times' => 1,
             'return' => false,
@@ -268,6 +551,7 @@ final class TaxHandlerTest extends TestCase
             'args' => ['woocommerce_tax_based_on', 'shipping'],
             'return' => 'shipping',
         ]);
+        $this->expectNexusFilterDisabled();
         WP_Mock::userFunction('get_transient', [
             'times' => 1,
             'return' => false,

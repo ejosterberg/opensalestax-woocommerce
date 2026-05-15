@@ -2,10 +2,10 @@
 Contributors: ejosterberg
 Tags: tax, sales-tax, woocommerce, taxjar, avalara, stripe-tax, ecommerce, us-tax, destination-based-tax, nexus, tax-calculation, multi-jurisdiction
 Requires at least: 6.2
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 8.2
 WC requires at least: 8.2
-WC tested up to: 10.5
+WC tested up to: 10.7
 Stable tag: 0.5.0
 License: Apache License 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
@@ -81,6 +81,13 @@ Enable the **Per-state nexus filter** (v0.5.0+) under WooCommerce → Settings �
 = Will this conflict with my other WooCommerce plugins? =
 
 The plugin is filter-only — it doesn't write to `wp_woocommerce_tax_rates`. Lowest possible plugin-conflict surface. Other plugins that read tax rates from the database see what WooCommerce stored there before activation.
+
+== Screenshots ==
+
+1. Main settings page (WooCommerce → Settings → Tax → OpenSalesTax) — engine base URL, API key, cache TTL, error fallback, the new per-state nexus filter (v0.5.0), nexus state allowlist, calculation log, and Test connection button.
+2. Tax class → OST category mapping: assign each WooCommerce tax class (Standard, reduced-rate, zero-rate, clothing, custom) to the right OpenSalesTax category, with a Reset-to-defaults checkbox.
+3. WP-admin dashboard widget — engine connection status (with version), placeholder-rate row state, and today's order count with breakdown captured, refreshed every 60s.
+4. Recent calculations debug log — 50-entry ring buffer of cache hits, engine calls, and errors, with ZIP, category, amount, tax total, and engine round-trip time.
 
 == Disclaimer ==
 

@@ -1,12 +1,13 @@
 # Current state — opensalestax-woocommerce
 
-**Last refresh:** 2026-05-15 (captain spec retrofit; code state unchanged from v0.4.1 ship 2026-05-05)
-**Status:** **v0.4.1 shipped 2026-05-05.** Mature plugin. Eight releases in ~10 days walked from initial alpha to feature-rich.
+**Last refresh:** 2026-05-15 (v0.5.0 shipped — per-state nexus filter)
+**Status:** **v0.5.0 shipped 2026-05-15.** Mature plugin. Nine releases. v0.5 added the per-state nexus filter (mirrors Vendure v1.2 / Magento v1.4 sibling pattern). 115 tests; PHPStan max + PHP-CS-Fixer + composer audit clean.
 
 ## What's shipped
 
 | Version | Tag | Date | Highlights |
 |---|---|---|---|
+| 0.5.0 | `v0.5.0` | 2026-05-15 | Per-state nexus filter — admin toggle + state allowlist short-circuits engine calls for non-nexus states |
 | 0.4.1 | `v0.4.1` | 2026-05-05 | Refund handling + engine-unreachable admin notice + Cache::get regression test |
 | 0.4.0 | `v0.4.0` | 2026-05-05 | WooCommerce Subscriptions bridge — force recalc on `wcs_renewal_order_created` |
 | 0.3.3 | `v0.3.3` | 2026-05-05 | Admin-UI tax-class mapper (WC tax class → OST category dropdown) |

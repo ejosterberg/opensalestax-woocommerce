@@ -3,18 +3,14 @@
 > **Read first if you're a fresh agent.** Constitution + current
 > state + this file are the canonical bring-up sequence.
 
-## You are here — 2026-05-15 (v0.4.1 shipped, captain back-filled specs)
+## You are here — 2026-05-15 (v0.5.0 shipped — per-state nexus filter)
 
-v0.4.1 is live on GitHub since 2026-05-05. Eight releases got
-us from initial alpha to a feature-rich plugin. The captain
-session of 2026-05-15 back-filled `CLAUDE.md` + this `specs/`
-directory because the prior sessions shipped fast and the
-spec writeup lagged.
+Nine releases now. v0.5.0 shipped the per-state nexus filter (mirrors Vendure v1.2 / Magento v1.4 sibling pattern). Admin toggle under WC → Settings → Tax → OpenSalesTax: when enabled, the `woocommerce_calc_tax` handler short-circuits for non-nexus states. Default off — pre-v0.5 behavior preserved. 115 tests; all quality gates green.
 
 For the deeper "where we are" snapshot read
 [`specs/current-state.md`](current-state.md).
 
-## What's next — v0.5 candidates
+## What's next — v0.6 candidates
 
 Pick whichever interests you. Each item is roughly a day of
 focused work; some are shorter if you stick to MVP scope.
@@ -41,11 +37,7 @@ focused work; some are shorter if you stick to MVP scope.
    header (already there) and wrap user-facing strings in
    `__()` / `_e()` / `_n()` calls. Add `.pot` generation to
    release tooling.
-4. **Per-state nexus filter.** Sibling pattern shipped in
-   Vendure v1.2 + (proposed) Magento v1.3. Add
-   `enabled_states` / `disabled_states` options. When set,
-   the `calc_tax` handler returns original `$tax_rates`
-   unmodified for non-listed states.
+4. ~~**Per-state nexus filter.**~~ ✅ Shipped in v0.5.0 (2026-05-15).
 5. **Multi-currency support gate.** WC supports multi-currency
    via add-ons. Verify the USD-only gate still works when WC
    is configured with multi-currency — the customer's checkout

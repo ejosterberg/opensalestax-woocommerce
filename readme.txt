@@ -1,12 +1,12 @@
 === OpenSalesTax for WooCommerce ===
 Contributors: ejosterberg
-Tags: tax, sales-tax, woocommerce, taxjar, avalara, stripe-tax
+Tags: tax, sales-tax, woocommerce, taxjar, avalara, stripe-tax, ecommerce, us-tax, destination-based-tax, nexus, tax-calculation, multi-jurisdiction
 Requires at least: 6.2
-Tested up to: 6.9
+Tested up to: 6.8
 Requires PHP: 8.2
 WC requires at least: 8.2
 WC tested up to: 10.5
-Stable tag: 0.4.1
+Stable tag: 0.5.0
 License: Apache License 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -36,6 +36,10 @@ The plugin hooks WooCommerce's `woocommerce_calc_tax` filter. On every line that
 3. Returns the calculated tax to WooCommerce
 
 Tax-exempt customers honored. Caching included (default 60-min TTL). Compatible with classic checkout AND Cart/Checkout Blocks.
+
+= Per-state nexus filter (v0.5.0+) =
+
+If you only have sales-tax nexus in some states, enable the **Per-state nexus filter** under WooCommerce → Settings → Tax → OpenSalesTax and list your nexus states (e.g. `MN, WI, IA`). Carts destined for states outside the list short-circuit before any engine call — WooCommerce falls back to its built-in tax-rate calculation (typically no tax). Default off, so existing installations see identical behavior until you opt in.
 
 = What this plugin is NOT =
 
@@ -68,7 +72,11 @@ Yes. The plugin honors WooCommerce's `WC()->customer->is_vat_exempt()` flag — 
 
 = Does it support multi-currency carts? =
 
-Not in v0.1. The OpenSalesTax engine is USD-only; non-USD orders throw an exception. v0.2+ may add currency-conversion support if the engine adds it.
+USD-only — the OpenSalesTax engine is US-only / USD-only by design (the value prop is destination-based US sales tax). Non-USD carts are skipped cleanly: the plugin returns no tax line and lets WooCommerce's built-in tax handling take over. Multi-currency support for the engine is a v0.6+ candidate.
+
+= How do I limit tax calculation to only states where I have nexus? =
+
+Enable the **Per-state nexus filter** (v0.5.0+) under WooCommerce → Settings → Tax → OpenSalesTax, then list your nexus states (e.g. `MN, WI, IA`). Carts shipping to other states will skip the engine call entirely.
 
 = Will this conflict with my other WooCommerce plugins? =
 
@@ -79,6 +87,13 @@ The plugin is filter-only — it doesn't write to `wp_woocommerce_tax_rates`. Lo
 Tax calculations are provided as-is for convenience. The merchant is solely responsible for tax-collection accuracy and remittance to the appropriate jurisdictions. Verify against your state Department of Revenue before remitting.
 
 == Changelog ==
+
+= 0.5.0 — 2026-05-15 =
+
+* Per-state nexus filter. New admin toggle + state-allowlist text field under WC → Settings → Tax → OpenSalesTax. When enabled, carts shipping to states outside your nexus list short-circuit before any engine call — WooCommerce falls back to its built-in tax-rate calculation. Default off; pre-v0.5 behavior preserved.
+* Edge cases honored strictly: filter on + empty allowlist = no tax anywhere (degenerate but explicit); filter on + unresolvable destination state = fail-closed (no tax line; safer for an opt-in).
+* Test-fragility fix: `TaxHandlerTest::setUp()` now installs its own `$wpdb` stub instead of relying on `DashboardWidgetTest` running first. `--filter TaxHandlerTest` now works in isolation.
+* 5 new unit tests covering all four filter paths plus back-compat default; 115 unit tests total.
 
 = 0.4.1 — 2026-05-05 =
 

@@ -1,0 +1,16 @@
+{
+  "name": "opensalestax-woocommerce-tools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local-only screenshot + verification helpers for the OpenSalesTax for WooCommerce plugin. Not shipped to NPM or to the WP-org plugin ZIP.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "screenshots": "node capture-screenshots.mjs",
+    "verify-blocks": "node verify-blocks-checkout.mjs",
+    "assets": "python make-assets.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}

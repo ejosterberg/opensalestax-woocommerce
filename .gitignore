@@ -21,3 +21,8 @@ Thumbs.db
 
 # One-off integration test runners (manually invoked on the VM, not shipped)
 /test-cart-simulation.php
+.claude-session-lock.json
+
+# Local-only screenshot/verification toolchain (not shipped to NPM or WP-org)
+/tools/node_modules/
+/tools/package-lock.json

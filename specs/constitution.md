@@ -1,4 +1,4 @@
-# Constitution — opensalestax-woocommerce
+# Constitution — opensalestax-for-woocommerce
 
 > Non-negotiable principles. Read before writing code; flag
 > conflicts explicitly before deviating.
@@ -95,7 +95,7 @@ in production code.
 
 ## §12. Distribution
 
-- Packagist: `ejosterberg/opensalestax-woocommerce`
+- Packagist: `ejosterberg/opensalestax-for-woocommerce`
 - WordPress.org plugin directory: deferred (manual /
   editorial submission process)
 - GitHub releases (per-tag) for direct download

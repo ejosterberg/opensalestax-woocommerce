@@ -75,9 +75,9 @@ final class EngineHealthNotice
 
         $settingsUrl = admin_url('admin.php?page=wc-settings&tab=tax&section=opensalestax');
         echo '<div class="notice notice-error"><p>';
-        echo '<strong>' . esc_html__('OpenSalesTax engine is unreachable.', 'opensalestax-woocommerce') . '</strong> ';
-        echo esc_html__('New cart calculations may be using your fallback behavior (no tax line or $0) instead of the engine. Check the engine\'s status and the configured base URL.', 'opensalestax-woocommerce');
-        echo ' <a href="' . esc_url($settingsUrl) . '">' . esc_html__('Open settings', 'opensalestax-woocommerce') . '</a>';
+        echo '<strong>' . esc_html__('OpenSalesTax engine is unreachable.', 'opensalestax-for-woocommerce') . '</strong> ';
+        echo esc_html__('New cart calculations may be using your fallback behavior (no tax line or $0) instead of the engine. Check the engine\'s status and the configured base URL.', 'opensalestax-for-woocommerce');
+        echo ' <a href="' . esc_url($settingsUrl) . '">' . esc_html__('Open settings', 'opensalestax-for-woocommerce') . '</a>';
         echo '</p></div>';
     }
 
@@ -147,10 +147,10 @@ final class EngineHealthNotice
     private static function logWarning(string $msg): void
     {
         if (function_exists('wc_get_logger')) {
-            wc_get_logger()->warning('[opensalestax-woocommerce] ' . $msg, ['source' => 'opensalestax-woocommerce']);
+            wc_get_logger()->warning('[opensalestax-for-woocommerce] ' . $msg, ['source' => 'opensalestax-for-woocommerce']);
             return;
         }
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[opensalestax-woocommerce] ' . $msg);
+        error_log('[opensalestax-for-woocommerce] ' . $msg);
     }
 }

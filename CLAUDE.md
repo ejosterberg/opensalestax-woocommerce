@@ -1,4 +1,4 @@
-# CLAUDE.md — opensalestax-woocommerce
+# CLAUDE.md — opensalestax-for-woocommerce
 
 > Project memory for Claude sessions on the WooCommerce
 > plugin. Read this AND `specs/constitution.md` +
@@ -17,7 +17,7 @@ OpenSalesTax engine. Free, open-source, Apache-2.0.
 - **Platforms:** WordPress 6.2+ / WooCommerce 8.2+ (tested
   through WC 10.5 / 10.7); HPOS-aware
 - **Runtime dep:** `ejosterberg/opensalestax` PHP SDK (^0.1)
-- **Distribution:** Packagist (`ejosterberg/opensalestax-woocommerce`)
+- **Distribution:** Packagist (`ejosterberg/opensalestax-for-woocommerce`)
   + WordPress.org plugin directory (submission deferred)
 - **License:** Apache-2.0
 - **Tests:** PHPUnit 9.6 + WP_Mock 1.0 + PHPStan + PHP-CS-Fixer
@@ -83,7 +83,7 @@ OpenSalesTax engine. Free, open-source, Apache-2.0.
   alpha/beta in this project's release line — every tag is a
   shipped point release).
 - GitHub release per tag.
-- Distributed via Packagist (`ejosterberg/opensalestax-woocommerce`).
+- Distributed via Packagist (`ejosterberg/opensalestax-for-woocommerce`).
 - WordPress.org plugin directory submission deferred (manual /
   editorial; no time pressure).
 - Live-VM verification on every release before tagging — log

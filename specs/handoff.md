@@ -1,4 +1,4 @@
-# Handoff — opensalestax-woocommerce
+# Handoff — opensalestax-for-woocommerce
 
 > **Read first if you're a fresh agent.** Constitution + current
 > state + this file are the canonical bring-up sequence.
@@ -54,7 +54,7 @@ focused work; some are shorter if you stick to MVP scope.
 ### Tier 2 — feature work
 
 3. **Internationalization (i18n).** Plugin strings are
-   English-only. Add `Text Domain: opensalestax-woocommerce`
+   English-only. Add `Text Domain: opensalestax-for-woocommerce`
    header (already there) and wrap user-facing strings in
    `__()` / `_e()` / `_n()` calls. Add `.pot` generation to
    release tooling.

@@ -71,10 +71,10 @@ class ClientFactory
     private static function logWarning(string $msg): void
     {
         if (function_exists('wc_get_logger')) {
-            wc_get_logger()->warning('[opensalestax-woocommerce] ' . $msg, ['source' => 'opensalestax-woocommerce']);
+            wc_get_logger()->warning('[opensalestax-for-woocommerce] ' . $msg, ['source' => 'opensalestax-for-woocommerce']);
             return;
         }
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[opensalestax-woocommerce] ' . $msg);
+        error_log('[opensalestax-for-woocommerce] ' . $msg);
     }
 }

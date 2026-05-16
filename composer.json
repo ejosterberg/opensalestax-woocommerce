@@ -1,10 +1,10 @@
 {
-    "name": "ejosterberg/opensalestax-woocommerce",
+    "name": "ejosterberg/opensalestax-for-woocommerce",
     "description": "WooCommerce plugin: replace TaxJar/Avalara with self-hosted OpenSalesTax — destination-based US sales tax at checkout.",
     "type": "wordpress-plugin",
     "license": ["Apache-2.0", "GPL-2.0-or-later"],
     "keywords": ["woocommerce", "wordpress", "tax", "sales-tax", "opensalestax", "us-tax"],
-    "homepage": "https://github.com/ejosterberg/opensalestax-woocommerce",
+    "homepage": "https://github.com/ejosterberg/opensalestax-for-woocommerce",
     "authors": [
         {"name": "Eric Osterberg", "email": "ejosterberg@gmail.com"}
     ],

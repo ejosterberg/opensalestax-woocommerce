@@ -6,6 +6,31 @@ Versioning: [SemVer](https://semver.org).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-15
+
+### Changed
+
+- **Plugin slug renamed `opensalestax-woocommerce` → `opensalestax-for-woocommerce`** to comply with WordPress.org's trademark policy. The bare `woocommerce` term is restricted in plugin slugs unless paired with one of the allowed patterns: `for woocommerce`, `with woocommerce`, `using woocommerce`, or `and woocommerce`. Plugin Check flagged the old slug as a WARNING in v0.5.1; WP-org's reviewer treats it as a hard reject. This release does the rename.
+- **Main PHP file** renamed `opensalestax-woocommerce.php` → `opensalestax-for-woocommerce.php` (via `git mv` — blame and history preserved).
+- **Text domain** renamed across every `__()` / `_e()` / `esc_html__()` / `esc_attr__()` call in `src/` and the main file. Plugin-header `Text Domain:` updated to match.
+- **Plugin headers** `Plugin URI:` and `Author URI:` updated to the new GitHub repository URL.
+- **Composer package name** `ejosterberg/opensalestax-woocommerce` → `ejosterberg/opensalestax-for-woocommerce`. Old Packagist package marked abandoned with `replacement: ejosterberg/opensalestax-for-woocommerce`; consumers with `composer require ejosterberg/opensalestax-woocommerce` in their `composer.json` get a deprecation warning pointing at the new package.
+- **WC-logger `source`** slug renamed (`wc_get_logger()->warning(..., ['source' => 'opensalestax-for-woocommerce'])`) so the new log channel matches the new plugin slug.
+- **GitHub repository** renamed `ejosterberg/opensalestax-woocommerce` → `ejosterberg/opensalestax-for-woocommerce` (GitHub auto-installs a redirect from the old URL; existing clones and links continue to work).
+
+### Unchanged
+
+- **User-visible plugin name** stays "OpenSalesTax for WooCommerce" (already user-friendly).
+- **PHP namespaces** stay `OpenSalesTax\WooCommerce\…` (not slug-derived). Class names unchanged.
+- **Internal option keys** (`opensalestax_*`) stay as-is — none contained `woocommerce`.
+- **Enqueue handles** (`opensalestax-admin`) already prefix-clean — no change.
+- **Behavior** — no functional changes; no settings migration required.
+
+### Verified
+
+- Plugin Check (WP-CLI mode, run on VM 907 against the deployed copy on the new slug) reports **0 errors + 0 warnings**. The v0.5.1 `trademarked_term` warning is gone.
+- 115 unit tests green; PHPStan max + PHP-CS-Fixer dry-run + composer audit all clean.
+
 ## [0.5.1] — 2026-05-15
 
 ### Changed

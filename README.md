@@ -23,8 +23,8 @@ You run a small VM (or container) for the OpenSalesTax engine; this plugin calls
 
 ```bash
 cd /path/to/your/wordpress/wp-content/plugins/
-git clone https://github.com/ejosterberg/opensalestax-woocommerce.git
-cd opensalestax-woocommerce
+git clone https://github.com/ejosterberg/opensalestax-for-woocommerce.git
+cd opensalestax-for-woocommerce
 composer install --no-dev
 ```
 
@@ -33,10 +33,10 @@ Activate via **WP Admin → Plugins**.
 Or via Composer:
 
 ```bash
-composer require ejosterberg/opensalestax-woocommerce
+composer require ejosterberg/opensalestax-for-woocommerce
 ```
 
-The SDK ([`ejosterberg/opensalestax`](https://packagist.org/packages/ejosterberg/opensalestax)) and the plugin ([`ejosterberg/opensalestax-woocommerce`](https://packagist.org/packages/ejosterberg/opensalestax-woocommerce)) are both on Packagist.
+The SDK ([`ejosterberg/opensalestax`](https://packagist.org/packages/ejosterberg/opensalestax)) and the plugin ([`ejosterberg/opensalestax-for-woocommerce`](https://packagist.org/packages/ejosterberg/opensalestax-for-woocommerce)) are both on Packagist.
 
 For the full step-by-step walkthrough including engine setup, configuration, and verification, see [`docs/INSTALL.md`](docs/INSTALL.md).
 

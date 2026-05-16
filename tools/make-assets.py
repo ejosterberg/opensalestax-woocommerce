@@ -1,5 +1,5 @@
 """
-Generate WP-org icon + banner assets for opensalestax-woocommerce.
+Generate WP-org icon + banner assets for opensalestax-for-woocommerce.
 
 SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 

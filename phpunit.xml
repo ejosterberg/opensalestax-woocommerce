@@ -19,7 +19,7 @@
     <coverage>
         <include>
             <directory suffix=".php">src</directory>
-            <file>opensalestax-woocommerce.php</file>
+            <file>opensalestax-for-woocommerce.php</file>
         </include>
     </coverage>
 </phpunit>

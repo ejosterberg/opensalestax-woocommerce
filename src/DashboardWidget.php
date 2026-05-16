@@ -79,37 +79,37 @@ final class DashboardWidget
         // Connection status.
         if (!$configured) {
             $rows[] = [
-                'label' => esc_html__('Connection', 'opensalestax-woocommerce'),
+                'label' => esc_html__('Connection', 'opensalestax-for-woocommerce'),
                 'value' => '<span style="color:#b32d2e;">'
-                    . esc_html__('Not configured', 'opensalestax-woocommerce') . '</span>',
+                    . esc_html__('Not configured', 'opensalestax-for-woocommerce') . '</span>',
                 'detail' => sprintf(
                     /* translators: %s = settings link */
-                    esc_html__('Set the engine base URL under %s.', 'opensalestax-woocommerce'),
+                    esc_html__('Set the engine base URL under %s.', 'opensalestax-for-woocommerce'),
                     '<a href="' . esc_url(self::settingsUrl()) . '">'
-                    . esc_html__('WooCommerce → Settings → Tax → OpenSalesTax', 'opensalestax-woocommerce')
+                    . esc_html__('WooCommerce → Settings → Tax → OpenSalesTax', 'opensalestax-for-woocommerce')
                     . '</a>',
                 ),
             ];
         } elseif ($health === null) {
             $rows[] = [
-                'label' => esc_html__('Connection', 'opensalestax-woocommerce'),
+                'label' => esc_html__('Connection', 'opensalestax-for-woocommerce'),
                 'value' => '<span style="color:#b32d2e;">'
-                    . esc_html__('Unreachable', 'opensalestax-woocommerce') . '</span>',
-                'detail' => esc_html__('Could not reach engine. See WP error log.', 'opensalestax-woocommerce'),
+                    . esc_html__('Unreachable', 'opensalestax-for-woocommerce') . '</span>',
+                'detail' => esc_html__('Could not reach engine. See WP error log.', 'opensalestax-for-woocommerce'),
             ];
         } else {
             $statusColor = $health->status === 'ok' ? '#00854a' : '#b32d2e';
             $rows[] = [
-                'label' => esc_html__('Connection', 'opensalestax-woocommerce'),
+                'label' => esc_html__('Connection', 'opensalestax-for-woocommerce'),
                 'value' => '<span style="color:' . esc_attr($statusColor) . ';">'
                     . esc_html(strtoupper($health->status)) . '</span>',
                 'detail' => sprintf(
                     /* translators: 1: engine version, 2: db state */
-                    esc_html__('Engine v%1$s — database %2$s', 'opensalestax-woocommerce'),
+                    esc_html__('Engine v%1$s — database %2$s', 'opensalestax-for-woocommerce'),
                     esc_html($health->version),
                     $health->databaseConnected
-                        ? '<span style="color:#00854a;">' . esc_html__('connected', 'opensalestax-woocommerce') . '</span>'
-                        : '<span style="color:#b32d2e;">' . esc_html__('disconnected', 'opensalestax-woocommerce') . '</span>',
+                        ? '<span style="color:#00854a;">' . esc_html__('connected', 'opensalestax-for-woocommerce') . '</span>'
+                        : '<span style="color:#b32d2e;">' . esc_html__('disconnected', 'opensalestax-for-woocommerce') . '</span>',
                 ),
             ];
         }
@@ -117,19 +117,19 @@ final class DashboardWidget
         // Placeholder rate state (affects whether tax line gets labeled "OpenSalesTax").
         if ($placeholderRateId === null) {
             $rows[] = [
-                'label' => esc_html__('Placeholder rate', 'opensalestax-woocommerce'),
+                'label' => esc_html__('Placeholder rate', 'opensalestax-for-woocommerce'),
                 'value' => '<span style="color:#dba617;">'
-                    . esc_html__('Missing', 'opensalestax-woocommerce') . '</span>',
-                'detail' => esc_html__('Re-activate the plugin to register the placeholder row.', 'opensalestax-woocommerce'),
+                    . esc_html__('Missing', 'opensalestax-for-woocommerce') . '</span>',
+                'detail' => esc_html__('Re-activate the plugin to register the placeholder row.', 'opensalestax-for-woocommerce'),
             ];
         } else {
             $rows[] = [
-                'label' => esc_html__('Placeholder rate', 'opensalestax-woocommerce'),
+                'label' => esc_html__('Placeholder rate', 'opensalestax-for-woocommerce'),
                 'value' => '<span style="color:#00854a;">'
-                    . esc_html__('OK', 'opensalestax-woocommerce') . '</span>',
+                    . esc_html__('OK', 'opensalestax-for-woocommerce') . '</span>',
                 'detail' => sprintf(
                     /* translators: %d = wp_woocommerce_tax_rates row id */
-                    esc_html__('tax_rate_id = %d', 'opensalestax-woocommerce'),
+                    esc_html__('tax_rate_id = %d', 'opensalestax-for-woocommerce'),
                     $placeholderRateId,
                 ),
             ];
@@ -137,9 +137,9 @@ final class DashboardWidget
 
         // Today's order count with breakdown captured.
         $rows[] = [
-            'label' => esc_html__('Orders today', 'opensalestax-woocommerce'),
+            'label' => esc_html__('Orders today', 'opensalestax-for-woocommerce'),
             'value' => esc_html((string) $todayCount),
-            'detail' => esc_html__('Orders with engine breakdown captured today.', 'opensalestax-woocommerce'),
+            'detail' => esc_html__('Orders with engine breakdown captured today.', 'opensalestax-for-woocommerce'),
         ];
 
         // Render.
@@ -154,10 +154,10 @@ final class DashboardWidget
         $out .= '</table>';
         $out .= '<p style="margin:.75em 0 0;">';
         $out .= '<a href="' . esc_url(self::settingsUrl()) . '" class="button button-secondary">'
-              . esc_html__('Configure', 'opensalestax-woocommerce') . '</a> ';
+              . esc_html__('Configure', 'opensalestax-for-woocommerce') . '</a> ';
         if ($configured) {
             $out .= '<a href="' . esc_url(admin_url('admin.php?page=wc-orders')) . '" class="button button-secondary">'
-                  . esc_html__('View orders', 'opensalestax-woocommerce') . '</a>';
+                  . esc_html__('View orders', 'opensalestax-for-woocommerce') . '</a>';
         }
         $out .= '</p>';
 
@@ -277,10 +277,10 @@ final class DashboardWidget
     private static function logWarning(string $msg): void
     {
         if (function_exists('wc_get_logger')) {
-            wc_get_logger()->warning('[opensalestax-woocommerce] ' . $msg, ['source' => 'opensalestax-woocommerce']);
+            wc_get_logger()->warning('[opensalestax-for-woocommerce] ' . $msg, ['source' => 'opensalestax-for-woocommerce']);
             return;
         }
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[opensalestax-woocommerce] ' . $msg);
+        error_log('[opensalestax-for-woocommerce] ' . $msg);
     }
 }

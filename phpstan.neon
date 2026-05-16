@@ -2,7 +2,7 @@ parameters:
     level: max
     paths:
         - src
-        - opensalestax-woocommerce.php
+        - opensalestax-for-woocommerce.php
     treatPhpDocTypesAsCertain: false
     bootstrapFiles:
         - tests/phpstan-bootstrap.php

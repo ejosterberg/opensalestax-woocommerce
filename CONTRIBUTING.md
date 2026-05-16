@@ -33,8 +33,8 @@ Every source file must carry an
 ## Dev install
 
 ```bash
-git clone https://github.com/ejosterberg/opensalestax-woocommerce.git
-cd opensalestax-woocommerce
+git clone https://github.com/ejosterberg/opensalestax-for-woocommerce.git
+cd opensalestax-for-woocommerce
 composer install
 ```
 
@@ -45,7 +45,7 @@ If you want to actively co-develop both the plugin and the SDK, clone them as si
 ```
 ~/projects/
 ├── opensalestax-php/             ← the SDK
-└── opensalestax-woocommerce/     ← this plugin
+└── opensalestax-for-woocommerce/     ← this plugin
 ```
 
 ```bash

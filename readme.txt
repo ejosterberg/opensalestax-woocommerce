@@ -6,7 +6,7 @@ Tested up to: 6.9
 Requires PHP: 8.2
 WC requires at least: 8.2
 WC tested up to: 10.7
-Stable tag: 0.5.1
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Tax calculations are provided as-is for convenience. The merchant is solely resp
 
 == Changelog ==
 
+= 0.6.0 — 2026-05-15 =
+
+* **Plugin slug renamed `opensalestax-woocommerce` → `opensalestax-for-woocommerce`** to comply with WordPress.org's trademark policy (the bare "woocommerce" term is restricted in slugs unless paired with one of the allowed patterns: `for woocommerce`, `with woocommerce`, `using woocommerce`, `and woocommerce`). Main plugin file renamed to `opensalestax-for-woocommerce.php` (history preserved via `git mv`); text domain renamed across every `__()` / `esc_html__()` / `esc_attr__()` call; Composer package renamed to `ejosterberg/opensalestax-for-woocommerce` (old name marked abandoned with `replacement` field); GitHub repository renamed (old URL auto-redirects). WC-logger `source` slug also renamed for log-channel consistency.
+* User-visible plugin name unchanged: still "OpenSalesTax for WooCommerce". No functional changes; no settings migration required.
+* Plugin Check final on the new slug: 0 errors + 0 warnings.
+
 = 0.5.1 — 2026-05-15 =
 
 * Dual-licensed Apache-2.0 OR GPL-2.0-or-later (was Apache-2.0 only). New top-level LICENSE file declares the dual arrangement; full Apache and GPL texts in LICENSE-APACHE.txt and LICENSE-GPL.txt. Plugin header + readme.txt declare "GPLv2 or later" for WordPress.org compatibility; the LICENSE file describes both options.
@@ -179,4 +185,4 @@ Tax calculations are provided as-is for convenience. The merchant is solely resp
 
 == Source code ==
 
-The full source code, including unit tests and integration tests against a real WordPress + WooCommerce instance, lives at https://github.com/ejosterberg/opensalestax-woocommerce.
+The full source code, including unit tests and integration tests against a real WordPress + WooCommerce instance, lives at https://github.com/ejosterberg/opensalestax-for-woocommerce.

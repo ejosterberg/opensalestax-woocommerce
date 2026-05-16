@@ -163,7 +163,7 @@ final class Command
         $rateId = PlaceholderRate::getRateId();
         if ($rateId === null) {
             self::warning('No placeholder rate row exists in wp_woocommerce_tax_rates.');
-            self::log('  Run `wp plugin deactivate opensalestax-woocommerce && wp plugin activate opensalestax-woocommerce` to create it.');
+            self::log('  Run `wp plugin deactivate opensalestax-for-woocommerce && wp plugin activate opensalestax-for-woocommerce` to create it.');
             return;
         }
         self::success("Placeholder rate row: tax_rate_id={$rateId}, tax_rate_name='" . PlaceholderRate::RATE_NAME . "'");

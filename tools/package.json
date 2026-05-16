@@ -1,5 +1,5 @@
 {
-  "name": "opensalestax-woocommerce-tools",
+  "name": "opensalestax-for-woocommerce-tools",
   "version": "0.0.0",
   "private": true,
   "description": "Local-only screenshot + verification helpers for the OpenSalesTax for WooCommerce plugin. Not shipped to NPM or to the WP-org plugin ZIP.",

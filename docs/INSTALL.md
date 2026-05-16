@@ -52,8 +52,8 @@ Three install methods, pick whichever fits your deploy workflow.
 
 ```bash
 cd /path/to/your/wordpress/wp-content/plugins/
-git clone https://github.com/ejosterberg/opensalestax-woocommerce.git
-cd opensalestax-woocommerce
+git clone https://github.com/ejosterberg/opensalestax-for-woocommerce.git
+cd opensalestax-for-woocommerce
 composer install --no-dev --no-progress
 ```
 
@@ -64,14 +64,14 @@ composer install --no-dev --no-progress
 When the repo flips public + lands on Packagist:
 
 ```bash
-composer require ejosterberg/opensalestax-woocommerce
+composer require ejosterberg/opensalestax-for-woocommerce
 ```
 
 You'll need `composer/installers` so Composer drops the package into `wp-content/plugins/` instead of `vendor/`.
 
 ### Method C — Pre-built release ZIP
 
-Download the latest release ZIP from the [Releases page](https://github.com/ejosterberg/opensalestax-woocommerce/releases) and upload via **WP Admin → Plugins → Add New → Upload Plugin**. The release ZIP bundles `vendor/` so no Composer step is needed.
+Download the latest release ZIP from the [Releases page](https://github.com/ejosterberg/opensalestax-for-woocommerce/releases) and upload via **WP Admin → Plugins → Add New → Upload Plugin**. The release ZIP bundles `vendor/` so no Composer step is needed.
 
 ---
 
@@ -81,7 +81,7 @@ Either:
 
 ```bash
 # Via WP-CLI:
-wp plugin activate opensalestax-woocommerce
+wp plugin activate opensalestax-for-woocommerce
 ```
 
 Or in the browser: **WP Admin → Plugins → Installed Plugins → "OpenSalesTax for WooCommerce" → Activate**.
@@ -137,7 +137,7 @@ Programmatic verification via WP-CLI:
 
 ```bash
 wp eval '
-require ABSPATH . "wp-content/plugins/opensalestax-woocommerce/vendor/autoload.php";
+require ABSPATH . "wp-content/plugins/opensalestax-for-woocommerce/vendor/autoload.php";
 $client = (new OpenSalesTax\WooCommerce\ClientFactory())->build();
 $h = $client->health();
 echo "status=" . $h->status . " version=" . $h->version . PHP_EOL;
@@ -156,7 +156,7 @@ Two ways to verify, depending on what's set up.
 If you have shell access to the WP server, run:
 
 ```bash
-wp eval-file wp-content/plugins/opensalestax-woocommerce/test-cart-simulation.php
+wp eval-file wp-content/plugins/opensalestax-for-woocommerce/test-cart-simulation.php
 ```
 
 > **Note:** the test-cart-simulation.php file isn't shipped in production releases (it's `.gitignore`d). Copy it manually from the dev branch if you want to use it for verification, or follow the browser-based flow below.
@@ -365,7 +365,7 @@ The flag is set per-customer via the WC admin UI or programmatically. If it's `f
 Cleanly removes the plugin's tax integration:
 
 ```bash
-wp plugin deactivate opensalestax-woocommerce
+wp plugin deactivate opensalestax-for-woocommerce
 wp option delete opensalestax_base_url
 wp option delete opensalestax_api_key
 wp option delete opensalestax_cache_ttl_minutes

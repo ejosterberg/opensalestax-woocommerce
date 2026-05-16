@@ -1,4 +1,4 @@
-# Current state — opensalestax-woocommerce
+# Current state — opensalestax-for-woocommerce
 
 **Last refresh:** 2026-05-15 (v0.5.0 shipped — per-state nexus filter)
 **Status:** **v0.5.0 shipped 2026-05-15.** Mature plugin. Nine releases. v0.5 added the per-state nexus filter (mirrors Vendure v1.2 / Magento v1.4 sibling pattern). 115 tests; PHPStan max + PHP-CS-Fixer + composer audit clean.
@@ -17,7 +17,7 @@
 | 0.2.0 | `v0.2.0` | 2026-05-05 | WC tax class → OST category custom mapping (six OST categories + skip) |
 | 0.1.x | `v0.1.0` → `v0.1.1` | 2026-05 | Initial alpha + bug fixes |
 
-GitHub: <https://github.com/ejosterberg/opensalestax-woocommerce>
+GitHub: <https://github.com/ejosterberg/opensalestax-for-woocommerce>
 
 ## Quality / verification baseline
 

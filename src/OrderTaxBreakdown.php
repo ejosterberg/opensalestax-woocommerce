@@ -249,11 +249,11 @@ final class OrderTaxBreakdown
     private static function logWarning(string $msg): void
     {
         if (function_exists('wc_get_logger')) {
-            wc_get_logger()->warning('[opensalestax-woocommerce] ' . $msg, ['source' => 'opensalestax-woocommerce']);
+            wc_get_logger()->warning('[opensalestax-for-woocommerce] ' . $msg, ['source' => 'opensalestax-for-woocommerce']);
             return;
         }
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[opensalestax-woocommerce] ' . $msg);
+        error_log('[opensalestax-for-woocommerce] ' . $msg);
     }
 
     /**
@@ -415,9 +415,9 @@ final class OrderTaxBreakdown
         }
 
         $out = '<div class="opensalestax-breakdown" style="margin-top:1em;padding:1em;background:#f6f7f7;border-left:4px solid #2271b1;">';
-        $out .= '<h4 style="margin-top:0;">' . esc_html__('OpenSalesTax breakdown', 'opensalestax-woocommerce') . '</h4>';
+        $out .= '<h4 style="margin-top:0;">' . esc_html__('OpenSalesTax breakdown', 'opensalestax-for-woocommerce') . '</h4>';
         $out .= '<p class="description" style="margin:0 0 .5em;">'
-              . esc_html__('Per-jurisdiction tax computed by the OpenSalesTax engine. Use for audit reconciliation; the rolled-up total is what was charged.', 'opensalestax-woocommerce')
+              . esc_html__('Per-jurisdiction tax computed by the OpenSalesTax engine. Use for audit reconciliation; the rolled-up total is what was charged.', 'opensalestax-for-woocommerce')
               . '</p>';
 
         foreach ($lines as $line) {
@@ -434,20 +434,20 @@ final class OrderTaxBreakdown
             $out .= '<thead><tr>';
             $out .= '<th colspan="4">' . sprintf(
                 /* translators: 1: category slug, 2: pre-tax amount, 3: tax amount */
-                esc_html__('Line: %1$s — amount $%2$s, tax $%3$s', 'opensalestax-woocommerce'),
+                esc_html__('Line: %1$s — amount $%2$s, tax $%3$s', 'opensalestax-for-woocommerce'),
                 esc_html($category),
                 esc_html($amount),
                 esc_html($tax),
             ) . '</th>';
             $out .= '</tr><tr>';
-            $out .= '<th>' . esc_html__('Type', 'opensalestax-woocommerce') . '</th>';
-            $out .= '<th>' . esc_html__('Jurisdiction', 'opensalestax-woocommerce') . '</th>';
-            $out .= '<th style="text-align:right;">' . esc_html__('Rate', 'opensalestax-woocommerce') . '</th>';
-            $out .= '<th style="text-align:right;">' . esc_html__('Tax', 'opensalestax-woocommerce') . '</th>';
+            $out .= '<th>' . esc_html__('Type', 'opensalestax-for-woocommerce') . '</th>';
+            $out .= '<th>' . esc_html__('Jurisdiction', 'opensalestax-for-woocommerce') . '</th>';
+            $out .= '<th style="text-align:right;">' . esc_html__('Rate', 'opensalestax-for-woocommerce') . '</th>';
+            $out .= '<th style="text-align:right;">' . esc_html__('Tax', 'opensalestax-for-woocommerce') . '</th>';
             $out .= '</tr></thead><tbody>';
 
             if (count($jurisdictions) === 0) {
-                $out .= '<tr><td colspan="4"><em>' . esc_html__('No jurisdictions returned (non-taxable category or uncovered ZIP).', 'opensalestax-woocommerce') . '</em></td></tr>';
+                $out .= '<tr><td colspan="4"><em>' . esc_html__('No jurisdictions returned (non-taxable category or uncovered ZIP).', 'opensalestax-for-woocommerce') . '</em></td></tr>';
             } else {
                 foreach ($jurisdictions as $j) {
                     if (!is_array($j)) {
@@ -467,7 +467,7 @@ final class OrderTaxBreakdown
             $out .= '</tbody></table>';
 
             if ($note !== null && $note !== '') {
-                $out .= '<p style="margin:0 0 1em;"><em>' . esc_html__('Note:', 'opensalestax-woocommerce') . ' ' . esc_html($note) . '</em></p>';
+                $out .= '<p style="margin:0 0 1em;"><em>' . esc_html__('Note:', 'opensalestax-for-woocommerce') . ' ' . esc_html($note) . '</em></p>';
             }
         }
 

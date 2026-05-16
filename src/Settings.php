@@ -173,20 +173,20 @@ final class Settings
             $custom = TaxClassMap::loadCustomMap();
             $slugs = self::collectAllTaxClassSlugs($effective);
 
-            echo '<h3 style="margin-top:2em;">' . esc_html__('Tax class → OST category mapping', 'opensalestax-woocommerce') . '</h3>';
+            echo '<h3 style="margin-top:2em;">' . esc_html__('Tax class → OST category mapping', 'opensalestax-for-woocommerce') . '</h3>';
             echo '<p class="description">';
-            echo esc_html__('Map each WooCommerce tax class to one of the OpenSalesTax categories. Defaults below mirror the engine\'s built-in behavior; customize as needed for clothing, groceries, or any custom WC class. Saving here also updates your override map.', 'opensalestax-woocommerce');
+            echo esc_html__('Map each WooCommerce tax class to one of the OpenSalesTax categories. Defaults below mirror the engine\'s built-in behavior; customize as needed for clothing, groceries, or any custom WC class. Saving here also updates your override map.', 'opensalestax-for-woocommerce');
             echo '</p>';
 
             echo '<table class="widefat striped" style="max-width:760px;">';
             echo '<thead><tr>';
-            echo '<th style="width:35%;">' . esc_html__('WC tax class', 'opensalestax-woocommerce') . '</th>';
-            echo '<th>' . esc_html__('OST category', 'opensalestax-woocommerce') . '</th>';
-            echo '<th style="width:15%;">' . esc_html__('Status', 'opensalestax-woocommerce') . '</th>';
+            echo '<th style="width:35%;">' . esc_html__('WC tax class', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('OST category', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th style="width:15%;">' . esc_html__('Status', 'opensalestax-for-woocommerce') . '</th>';
             echo '</tr></thead><tbody>';
 
             foreach ($slugs as $slug) {
-                $label = $slug === '' ? __('Standard (empty slug)', 'opensalestax-woocommerce') : $slug;
+                $label = $slug === '' ? __('Standard (empty slug)', 'opensalestax-for-woocommerce') : $slug;
                 $current = $effective[$slug] ?? TaxClassMap::FALLBACK_CATEGORY;
                 $isCustom = isset($custom[$slug]);
 
@@ -198,7 +198,7 @@ final class Settings
                 // Skip option = empty string. Build the selected attribute as a
                 // discrete string we can pass through esc_attr().
                 $skipSelected = $current === TaxClassMap::SKIP_CATEGORY ? 'selected' : '';
-                echo '<option value="" ' . esc_attr($skipSelected) . '>' . esc_html__('— Skip (non-taxable) —', 'opensalestax-woocommerce') . '</option>';
+                echo '<option value="" ' . esc_attr($skipSelected) . '>' . esc_html__('— Skip (non-taxable) —', 'opensalestax-for-woocommerce') . '</option>';
                 foreach (TaxClassMap::VALID_CATEGORIES as $cat) {
                     $sel = $current === $cat ? 'selected' : '';
                     echo '<option value="' . esc_attr($cat) . '" ' . esc_attr($sel) . '>' . esc_html($cat) . '</option>';
@@ -206,9 +206,9 @@ final class Settings
                 echo '</select></td>';
                 echo '<td>';
                 if ($isCustom) {
-                    echo '<span style="color:#2271b1;">' . esc_html__('Custom', 'opensalestax-woocommerce') . '</span>';
+                    echo '<span style="color:#2271b1;">' . esc_html__('Custom', 'opensalestax-for-woocommerce') . '</span>';
                 } else {
-                    echo '<span style="color:#646970;">' . esc_html__('Default', 'opensalestax-woocommerce') . '</span>';
+                    echo '<span style="color:#646970;">' . esc_html__('Default', 'opensalestax-for-woocommerce') . '</span>';
                 }
                 echo '</td>';
                 echo '</tr>';
@@ -217,7 +217,7 @@ final class Settings
 
             echo '<p>';
             echo '<label><input type="checkbox" name="opensalestax_tax_class_map_reset" value="1" /> ';
-            echo esc_html__('Reset all to defaults (clears any custom overrides on save)', 'opensalestax-woocommerce');
+            echo esc_html__('Reset all to defaults (clears any custom overrides on save)', 'opensalestax-for-woocommerce');
             echo '</label></p>';
         });
     }
@@ -354,32 +354,32 @@ final class Settings
         add_action('woocommerce_admin_field_opensalestax_recent_log', static function (): void {
             $entries = CalculationLog::getRecent(20);
             $enabled = CalculationLog::isEnabled();
-            echo '<h3 style="margin-top:2em;">' . esc_html__('Recent calculations', 'opensalestax-woocommerce') . '</h3>';
+            echo '<h3 style="margin-top:2em;">' . esc_html__('Recent calculations', 'opensalestax-for-woocommerce') . '</h3>';
             if (!$enabled) {
                 echo '<p class="description">'
-                    . esc_html__('Logging is currently disabled. Switch the "Calculation log" option above to "Enabled" and save changes to start capturing calculations.', 'opensalestax-woocommerce')
+                    . esc_html__('Logging is currently disabled. Switch the "Calculation log" option above to "Enabled" and save changes to start capturing calculations.', 'opensalestax-for-woocommerce')
                     . '</p>';
                 if (count($entries) === 0) {
                     return;
                 }
-                echo '<p class="description"><em>' . esc_html__('Showing entries from the last time logging was enabled.', 'opensalestax-woocommerce') . '</em></p>';
+                echo '<p class="description"><em>' . esc_html__('Showing entries from the last time logging was enabled.', 'opensalestax-for-woocommerce') . '</em></p>';
             }
             if (count($entries) === 0) {
                 echo '<p class="description">'
-                    . esc_html__('No calculations have been recorded yet. Run a test cart through checkout, then refresh this page.', 'opensalestax-woocommerce')
+                    . esc_html__('No calculations have been recorded yet. Run a test cart through checkout, then refresh this page.', 'opensalestax-for-woocommerce')
                     . '</p>';
                 return;
             }
             echo '<table class="widefat striped" style="max-width:100%;">';
             echo '<thead><tr>';
-            echo '<th>' . esc_html__('Time (UTC)', 'opensalestax-woocommerce') . '</th>';
-            echo '<th>' . esc_html__('Source', 'opensalestax-woocommerce') . '</th>';
-            echo '<th>' . esc_html__('ZIP', 'opensalestax-woocommerce') . '</th>';
-            echo '<th>' . esc_html__('Category', 'opensalestax-woocommerce') . '</th>';
-            echo '<th style="text-align:right;">' . esc_html__('Amount', 'opensalestax-woocommerce') . '</th>';
-            echo '<th style="text-align:right;">' . esc_html__('Tax', 'opensalestax-woocommerce') . '</th>';
-            echo '<th style="text-align:right;">' . esc_html__('Duration', 'opensalestax-woocommerce') . '</th>';
-            echo '<th>' . esc_html__('Note / Error', 'opensalestax-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Time (UTC)', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Source', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('ZIP', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Category', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Amount', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Tax', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th style="text-align:right;">' . esc_html__('Duration', 'opensalestax-for-woocommerce') . '</th>';
+            echo '<th>' . esc_html__('Note / Error', 'opensalestax-for-woocommerce') . '</th>';
             echo '</tr></thead><tbody>';
             $stringify = static fn (mixed $v): string => is_scalar($v) ? (string) $v : '';
             foreach ($entries as $e) {
